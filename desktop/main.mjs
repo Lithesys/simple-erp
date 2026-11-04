@@ -16,9 +16,11 @@ const { Client } = pg;
 const { autoUpdater } = updater;
 const root = path.dirname(fileURLToPath(import.meta.url));
 // Keep existing database/config files in place when the display name changes.
-const stableUserDataPath = path.join(app.getPath("appData"), "lan-duy-linh-pos");
+const stableUserDataPath = process.env.ERP_DESKTOP_USER_DATA_DIR?.trim()
+  ? path.resolve(process.env.ERP_DESKTOP_USER_DATA_DIR)
+  : path.join(app.getPath("appData"), "lan-duy-linh-pos");
 app.setPath("userData", stableUserDataPath);
-const gatewayPort = 43121;
+const gatewayPort = Number(process.env.ERP_DESKTOP_GATEWAY_PORT || 43121);
 const gatewayUrl = `http://127.0.0.1:${gatewayPort}`;
 const serviceKey = process.env.ERP_DESKTOP_SERVICE_KEY || randomBytes(32).toString("base64url");
 let windowInstance;
@@ -742,9 +744,14 @@ function registerUpdater() {
 }
 
 function registerIpc() {
-  const mainOrigin = currentWindowOrigin();
   const authorizeFrame = (event) => {
-    if (!windowInstance || event.sender !== windowInstance.webContents || event.senderFrame?.url?.startsWith(mainOrigin) !== true) {
+    let senderOrigin = "";
+    try {
+      senderOrigin = new URL(event.senderFrame?.url || "").origin;
+    } catch {
+      // Reject malformed or unavailable frame URLs below.
+    }
+    if (!windowInstance || event.sender !== windowInstance.webContents || senderOrigin !== currentWindowOrigin()) {
       throw new Error("The desktop operation came from an untrusted window.");
     }
   };
@@ -824,7 +831,7 @@ function registerIpc() {
   ipcMain.handle("desktop:print-page", (event) => {
     authorizeFrame(event);
     return new Promise((resolve) => {
-      event.sender.print({ silent: false, printBackground: true }, (success, failureReason) => {
+      event.sender.print({ silent: true, printBackground: true }, (success, failureReason) => {
         resolve(success
           ? { ok: true }
           : { ok: false, message: failureReason || "Could not print to the default printer." });

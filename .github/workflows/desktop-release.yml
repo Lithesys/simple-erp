@@ -18,6 +18,15 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - name: Read release title from the annotated tag
+        id: release-title
+        shell: pwsh
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          $subject = (git for-each-ref --format='%(contents:subject)' "refs/tags/$tag").Trim()
+          if (-not $subject) { $subject = "Desktop app release $tag" }
+          "subject=$subject" >> $env:GITHUB_OUTPUT
+          "title=ERP $tag - $subject" >> $env:GITHUB_OUTPUT
       - name: Set package version from the release tag
         shell: pwsh
         run: |
@@ -54,7 +63,8 @@ jobs:
         with:
           token: ${{ secrets.DESKTOP_PUBLISH_TOKEN || secrets.GITHUB_TOKEN }}
           repository: ${{ vars.DESKTOP_RELEASE_OWNER || 'Lithesys' }}/${{ vars.DESKTOP_RELEASE_REPO || 'simple-erp' }}
-          name: ERP ${{ github.ref_name }}
+          name: ${{ steps.release-title.outputs.title }}
+          body: ${{ steps.release-title.outputs.subject }}
           files: |
             release/*.exe
             release/*.exe.blockmap

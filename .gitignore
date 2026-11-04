@@ -20,6 +20,7 @@
 # production
 /build
 /release
+/.desktop-dev-data/
 
 # misc
 .DS_Store
