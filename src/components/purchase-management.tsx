@@ -208,12 +208,9 @@ export function PurchaseManagement({
   const [activeProductIndex, setActiveProductIndex] = useState(0);
 
   function canEditPurchaseOrder(order: PurchaseOrder | null | undefined) {
-    return Boolean(
-      order &&
-        canEditOrder &&
-        order.status !== "cancelled" &&
-        (order.status !== "received" || canApprove),
-    );
+    if (!order) return false;
+    if (order.status === "pending") return canEditOrder || canCreate;
+    return order.status === "received" && canEditOrder && canApprove;
   }
 
   const currentEditOrder =
@@ -1032,12 +1029,9 @@ export function PurchaseManagement({
         supabase,
         ["purchase-order-edit-items", order.id],
         async () => {
-          const result = await supabase
-            .from("purchase_order_items")
-            .select(
-              "id,product_id,quantity,unit_cost,sku,product_name,unit,line_total",
-            )
-            .eq("purchase_order_id", order.id);
+          const result = await supabase.rpc("get_purchase_order_edit_items", {
+            p_purchase_order_id: order.id,
+          });
           if (result.error) throw result.error;
           return result.data;
         },
@@ -1056,22 +1050,27 @@ export function PurchaseManagement({
       id: string;
       product_id: string | null;
       quantity: number;
-      unit_cost: number;
+      unit_cost: number | null;
       sku: string;
       product_name: string;
       unit: string;
-      line_total: number;
+      line_total: number | null;
     }[];
+    const normalizedItems = data.map((item) => ({
+      ...item,
+      unit_cost: Number(item.unit_cost ?? 0),
+      line_total: Number(item.line_total ?? 0),
+    }));
     purchaseForm.reset({
       purchasedAt: formatDateTimeLocal(order.purchased_at),
-      lines: data.map((item) => ({
+      lines: normalizedItems.map((item) => ({
         id: item.id,
         product_id: item.product_id || "",
         quantity: String(item.quantity),
         unit_cost: String(item.unit_cost),
       })),
     });
-    setSelectedItems((data || []) as PurchaseItem[]);
+    setSelectedItems(normalizedItems as PurchaseItem[]);
     setError("");
   }
 
