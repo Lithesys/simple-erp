@@ -27,11 +27,21 @@ jobs:
         env:
           DESKTOP_RELEASE_OWNER: ${{ vars.DESKTOP_RELEASE_OWNER || 'Lithesys' }}
           DESKTOP_RELEASE_REPO: ${{ vars.DESKTOP_RELEASE_REPO || 'simple-erp' }}
-      - name: Build and publish the installer
-        run: npx electron-builder --config electron-builder.config.cjs --win nsis --publish always
+      - name: Build the installer and update metadata
+        run: npx electron-builder --config electron-builder.config.cjs --win nsis --publish never
         env:
-          GH_TOKEN: ${{ secrets.DESKTOP_PUBLISH_TOKEN || secrets.GITHUB_TOKEN }}
           DESKTOP_RELEASE_OWNER: ${{ vars.DESKTOP_RELEASE_OWNER || 'Lithesys' }}
           DESKTOP_RELEASE_REPO: ${{ vars.DESKTOP_RELEASE_REPO || 'simple-erp' }}
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+      - name: Publish one release with all installer assets
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.DESKTOP_PUBLISH_TOKEN || secrets.GITHUB_TOKEN }}
+          repository: ${{ vars.DESKTOP_RELEASE_OWNER || 'Lithesys' }}/${{ vars.DESKTOP_RELEASE_REPO || 'simple-erp' }}
+          name: ERP ${{ github.ref_name }}
+          files: |
+            release/*.exe
+            release/*.exe.blockmap
+            release/latest.yml
+          fail_on_unmatched_files: true
