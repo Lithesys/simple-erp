@@ -8,6 +8,7 @@ module.exports = {
       provider: "github",
       owner: process.env.DESKTOP_RELEASE_OWNER || "Lithesys",
       repo: process.env.DESKTOP_RELEASE_REPO || "simple-erp",
+      releaseType: "release",
     },
   ],
 };
