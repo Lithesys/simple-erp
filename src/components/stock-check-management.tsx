@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { Ban, Check, Pencil, Plus, Printer, Trash2, X } from "lucide-react";
 import { toast } from "react-toastify";
 import { AppButton } from "@/components/app-button";
@@ -125,6 +126,7 @@ export function StockCheckManagement({
   const isMobile = pathname.startsWith("/mobile/");
   const detailModal = useEntityDetailId();
   const supabase = createClient();
+  const queryClient = useQueryClient();
   const {
     canList,
     canCreate,
@@ -504,6 +506,8 @@ export function StockCheckManagement({
           ? "Đã lưu tạm phiếu kiểm kho."
           : "Đã hoàn thành phiếu kiểm kho và cập nhật tồn.",
       );
+      if (action === "complete")
+        await queryClient.invalidateQueries({ queryKey: ["pos-products"] });
       await load();
       if (canList && data) {
         const { data: detail } = await supabase.rpc("get_stock_check", {
@@ -559,6 +563,7 @@ export function StockCheckManagement({
       if (cancelError) toast.error(cancelError.message);
       else {
         toast.success("Đã hủy phiếu và hoàn lại chênh lệch vào tồn hiện tại.");
+        await queryClient.invalidateQueries({ queryKey: ["pos-products"] });
         await load();
       }
       setConfirmRequest(null);

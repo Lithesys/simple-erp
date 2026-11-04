@@ -7,6 +7,24 @@ export function normalizeSearchText(value: string) {
     .toLocaleLowerCase("vi");
 }
 
+export function normalizeSearchTextWithDiacritics(value: string) {
+  return value.trim().normalize("NFC").toLocaleLowerCase("vi");
+}
+
+export function hasSearchDiacritics(value: string) {
+  return /[\u0300-\u036f]/.test(value.normalize("NFD")) || /[đĐ]/.test(value);
+}
+
+export function matchesSearchQueryWithDiacritics(text: string, query: string) {
+  const tokens = normalizeSearchTextWithDiacritics(query)
+    .split(/\s+/)
+    .filter(Boolean);
+  if (!tokens.length) return true;
+
+  const normalizedText = normalizeSearchTextWithDiacritics(text);
+  return tokens.every((token) => normalizedText.includes(token));
+}
+
 export function getSearchTokens(query: string) {
   return normalizeSearchText(query).split(/\s+/).filter(Boolean);
 }

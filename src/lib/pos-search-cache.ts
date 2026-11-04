@@ -2,9 +2,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PriceList, Product } from "./types";
 import type { Customer } from "./customers";
 import {
+  hasSearchDiacritics,
   matchesSearchPhrase,
   matchesSearchQuery,
+  matchesSearchQueryWithDiacritics,
   normalizeSearchText,
+  normalizeSearchTextWithDiacritics,
 } from "./search";
 
 const DATABASE_NAME = "lan-duy-linh-pos-search-v1";
@@ -13,7 +16,14 @@ const STORE_NAME = "records";
 type CacheRecord<T> = { key: string; savedAt: number; value: T };
 const customerIndexes = new Map<
   string,
-  { savedAt: number; rows: { customer: Customer; text: string }[] }
+  {
+    savedAt: number;
+    rows: {
+      customer: Customer;
+      text: string;
+      textWithDiacritics: string;
+    }[];
+  }
 >();
 const loadedCaches = new Map<string, PosSearchData | null>();
 export type PosSearchData = {
@@ -21,6 +31,7 @@ export type PosSearchData = {
   priceLists: PriceList[];
   customers: Customer[];
   savedAt: number;
+  customersSavedAt?: number;
 };
 
 export function searchProductsLocally<T extends Pick<Product, "name" | "sku">>(
@@ -29,6 +40,31 @@ export function searchProductsLocally<T extends Pick<Product, "name" | "sku">>(
   limit = 8,
 ) {
   if (!query.trim()) return [];
+  if (hasSearchDiacritics(query)) {
+    const exactMatches = products.filter((product) =>
+      matchesSearchQueryWithDiacritics(
+        `${product.name} ${product.sku}`,
+        query,
+      ),
+    );
+    if (exactMatches.length) {
+      const normalizedQuery = normalizeSearchTextWithDiacritics(query)
+        .replace(/\s+/g, " ")
+        .trim();
+      return exactMatches
+        .sort((first, second) => {
+          const isExactPhrase = (product: T) =>
+            [product.name, product.sku].some((value) =>
+              normalizeSearchTextWithDiacritics(value)
+                .replace(/\s+/g, " ")
+                .includes(normalizedQuery),
+            );
+          return Number(isExactPhrase(second)) - Number(isExactPhrase(first));
+        })
+        .slice(0, limit);
+    }
+  }
+
   const phraseMatches = products.filter(
     (product) =>
       matchesSearchPhrase(product.name, query) ||
@@ -185,6 +221,9 @@ export async function searchCachedCustomers(
         text: normalizeSearchText(
           `${customer.name} ${customer.phone} ${customer.address}`,
         ),
+        textWithDiacritics: normalizeSearchTextWithDiacritics(
+          `${customer.name} ${customer.phone} ${customer.address}`,
+        ),
       })),
     };
     customerIndexes.set(session.user.id, index);
@@ -192,6 +231,13 @@ export async function searchCachedCustomers(
   const needle = normalizeSearchText(query);
   if (!needle)
     return index.rows.slice(0, limit).map(({ customer }) => customer);
+  if (hasSearchDiacritics(query)) {
+    const exactMatches = index.rows.filter(({ textWithDiacritics }) =>
+      matchesSearchQueryWithDiacritics(textWithDiacritics, query),
+    );
+    if (exactMatches.length)
+      return exactMatches.slice(0, limit).map(({ customer }) => customer);
+  }
   return index.rows
     .filter(({ text }) => matchesCachedCustomerText(text, needle))
     .map(({ customer }) => customer)
@@ -207,6 +253,7 @@ export async function syncPosSearchData(
 ) {
   const previous = await readPosSearchCache(userId);
   let customers = previous?.customers ?? [];
+  let customersSavedAt = previous?.customersSavedAt ?? previous?.savedAt ?? 0;
   if (refreshCustomers || !previous) {
     customers = [];
     for (let offset = 0; ; offset += 100) {
@@ -224,6 +271,12 @@ export async function syncPosSearchData(
       )
         break;
     }
+    customersSavedAt = Date.now();
   }
-  await writePosSearchCache(userId, { products, priceLists, customers });
+  await writePosSearchCache(userId, {
+    products,
+    priceLists,
+    customers,
+    customersSavedAt,
+  });
 }

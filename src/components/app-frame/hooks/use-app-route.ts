@@ -11,7 +11,7 @@ export function useAppRoute() {
   const desktopPathname = toDesktopRoute(pathname);
 
   useEffect(() => {
-    const viewport = window.matchMedia("(max-width: 720px)");
+    const viewport = window.matchMedia("screen and (max-width: 720px)");
     const synchronizeRoute = () => {
       const nextHref = getResponsiveHref(
         pathname,

@@ -824,7 +824,7 @@ function registerIpc() {
   ipcMain.handle("desktop:print-page", (event) => {
     authorizeFrame(event);
     return new Promise((resolve) => {
-      event.sender.print({ silent: true, printBackground: true }, (success, failureReason) => {
+      event.sender.print({ silent: false, printBackground: true }, (success, failureReason) => {
         resolve(success
           ? { ok: true }
           : { ok: false, message: failureReason || "Could not print to the default printer." });

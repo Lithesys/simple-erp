@@ -246,6 +246,7 @@ export function OrdersManagement({
     defaultOrderFilters(),
   );
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const filterApplyTimerRef = useRef<number | null>(null);
   const filterPanelRef = useRef<HTMLDivElement>(null);
   const [detailExportOpen, setDetailExportOpen] = useState(false);
   const [exportBusy, setExportBusy] = useState(false);
@@ -806,6 +807,13 @@ export function OrdersManagement({
     setFiltersOpen(false);
     setProductPickerOpen(false);
   });
+  useEffect(
+    () => () => {
+      if (filterApplyTimerRef.current !== null)
+        window.clearTimeout(filterApplyTimerRef.current);
+    },
+    [],
+  );
   const loadOrderDetail = useCallback(
     async (order: Order, requestId: number) => {
       setOriginalItems([]);
@@ -1227,6 +1235,7 @@ export function OrdersManagement({
     setEditing(false);
     setSavingEdit(false);
     toast.success("Đã cập nhật đơn hàng và tồn kho.");
+    await queryClient.invalidateQueries({ queryKey: ["pos-products"] });
     await queryClient.invalidateQueries({ queryKey: ["orders"] });
     await queryClient.invalidateQueries({
       queryKey: ["orders-summary-filtered"],
@@ -1268,6 +1277,7 @@ export function OrdersManagement({
       );
       closeOrderDetail();
       toast.success("Đã hủy " + target.order_no + " và cộng lại tồn kho.");
+      await queryClient.invalidateQueries({ queryKey: ["pos-products"] });
       await queryClient.invalidateQueries({ queryKey: ["orders"] });
       await queryClient.invalidateQueries({
         queryKey: ["orders-summary-filtered"],
@@ -1294,13 +1304,21 @@ export function OrdersManagement({
     }
     setFiltersOpen(true);
   }
-  function applyFilters() {
-    setFiltersOpen(false);
-    setProductPickerOpen(false);
-    void load(1, size, draftFilters);
+  function scheduleFilterApply(nextFilters: OrderFilters) {
+    setDraftFilters(nextFilters);
+    if (filterApplyTimerRef.current !== null)
+      window.clearTimeout(filterApplyTimerRef.current);
+    filterApplyTimerRef.current = window.setTimeout(() => {
+      filterApplyTimerRef.current = null;
+      void load(1, size, nextFilters);
+    }, 300);
   }
   function clearFilters() {
     const defaults = defaultOrderFilters();
+    if (filterApplyTimerRef.current !== null) {
+      window.clearTimeout(filterApplyTimerRef.current);
+      filterApplyTimerRef.current = null;
+    }
     setDraftFilters(defaults);
     setDraftContact({ name: "", phone: "", address: "" });
     setProductSearch("");
@@ -1308,26 +1326,30 @@ export function OrdersManagement({
     void load(1, size, defaults);
   }
   function toggleProduct(sku: string) {
-    setDraftFilters((current) => ({
-      ...current,
-      productSkus: current.productSkus.includes(sku)
-        ? current.productSkus.filter((value) => value !== sku)
-        : [...current.productSkus, sku],
-    }));
+    scheduleFilterApply({
+      ...draftFilters,
+      productSkus: draftFilters.productSkus.includes(sku)
+        ? draftFilters.productSkus.filter((value) => value !== sku)
+        : [...draftFilters.productSkus, sku],
+    });
   }
   function toggleStatus(status: OrderStatus) {
-    setDraftFilters((current) => ({
-      ...current,
-      statuses: current.statuses.includes(status)
-        ? current.statuses.filter((value) => value !== status)
-        : [...current.statuses, status],
-    }));
+    scheduleFilterApply({
+      ...draftFilters,
+      statuses: draftFilters.statuses.includes(status)
+        ? draftFilters.statuses.filter((value) => value !== status)
+        : [...draftFilters.statuses, status],
+    });
   }
   function changeDraftDates(from: string, to: string) {
     const nextFilters = { ...draftFilters, from, to };
     if (!isValidOrderTimeRange(nextFilters)) {
       toast.error("Giờ kết thúc phải sau giờ bắt đầu trong cùng ngày.");
       return;
+    }
+    if (filterApplyTimerRef.current !== null) {
+      window.clearTimeout(filterApplyTimerRef.current);
+      filterApplyTimerRef.current = null;
     }
     setDraftFilters(nextFilters);
     void load(1, size, nextFilters);
@@ -1337,6 +1359,10 @@ export function OrdersManagement({
     if (!isValidOrderTimeRange(nextFilters)) {
       toast.error("Giờ kết thúc phải sau giờ bắt đầu trong cùng ngày.");
       return;
+    }
+    if (filterApplyTimerRef.current !== null) {
+      window.clearTimeout(filterApplyTimerRef.current);
+      filterApplyTimerRef.current = null;
     }
     setDraftFilters(nextFilters);
     void load(1, size, nextFilters);
@@ -1896,10 +1922,10 @@ export function OrdersManagement({
                       placeholder="Theo mã hóa đơn"
                       value={draftFilters.invoice}
                       onChange={(event) =>
-                        setDraftFilters((current) => ({
-                          ...current,
+                        scheduleFilterApply({
+                          ...draftFilters,
                           invoice: event.target.value,
-                        }))
+                        })
                       }
                     />
                   </label>
@@ -1983,11 +2009,11 @@ export function OrdersManagement({
                             className="orders-product-chip"
                             title={`Bỏ ${draftFilters.productName || "hàng hóa"}`}
                             onClick={() =>
-                              setDraftFilters((current) => ({
-                                ...current,
+                              scheduleFilterApply({
+                                ...draftFilters,
                                 productId: "",
                                 productName: "",
-                              }))
+                              })
                             }
                           >
                             <span className="orders-product-chip-label">
@@ -2029,10 +2055,10 @@ export function OrdersManagement({
                     value={draftContact}
                     onChange={(contact) => {
                       setDraftContact(contact);
-                      setDraftFilters((current) => ({
-                        ...current,
+                      scheduleFilterApply({
+                        ...draftFilters,
                         customer: contact.name,
-                      }));
+                      });
                     }}
                   />
                 </div>
@@ -2059,18 +2085,9 @@ export function OrdersManagement({
                   <AppButton
                     variant="ghost"
                     type="button"
-
                     onClick={clearFilters}
                   >
                     Xóa bộ lọc
-                  </AppButton>
-                  <AppButton
-                    variant="primary"
-                    type="button"
-
-                    onClick={applyFilters}
-                  >
-                    Tìm kiếm
                   </AppButton>
                 </div>
               </div>

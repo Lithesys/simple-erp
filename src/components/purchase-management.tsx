@@ -44,7 +44,6 @@ import {
   ConfirmDialog,
   type ConfirmRequest,
 } from "@/components/confirm-dialog";
-import { useDebounce } from "@/lib/debounce";
 import { useQueryClient } from "@tanstack/react-query";
 import { fetchCachedQuery } from "@/lib/query-cache";
 import { useInitialTableLoading } from "@/lib/use-initial-table-loading";
@@ -108,6 +107,11 @@ type PurchaseAccess = {
   canApprove: boolean;
   canViewCost: boolean;
 };
+type PurchaseFilterValues = {
+  query: string;
+  productQuery: string;
+  statuses: string[];
+};
 const defaultPurchaseSort: DataTableSort = {
   key: "purchased_at",
   direction: "desc",
@@ -169,7 +173,6 @@ export function PurchaseManagement({
   const [retryKey, setRetryKey] = useState<string | null>(null);
   const { loading, finishInitialLoad } = useInitialTableLoading();
   const [query, setQuery] = usePreference("purchases.search", "");
-  const debouncedQuery = useDebounce(query);
   const [savedSort, setSort] = usePreference<DataTableSort | null>(
     "table.purchases.sort",
     defaultPurchaseSort,
@@ -179,7 +182,6 @@ export function PurchaseManagement({
     "purchases.productSearch",
     "",
   );
-  const debouncedProductFilterQuery = useDebounce(productFilterQuery);
   const [statusFilters, setStatusFilters] = usePreference<string[]>(
     "purchases.statuses",
     ["pending", "received"],
@@ -189,6 +191,7 @@ export function PurchaseManagement({
     to: string;
   }>("purchases.createdAtRange", { from: "", to: "" });
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const filterApplyTimerRef = useRef<number | null>(null);
   const [draftQuery, setDraftQuery] = useState(query);
   const [draftProductFilterQuery, setDraftProductFilterQuery] =
     useState(productFilterQuery);
@@ -204,6 +207,19 @@ export function PurchaseManagement({
   const [productQuery, setProductQuery] = useState("");
   const [activeProductIndex, setActiveProductIndex] = useState(0);
 
+  function canEditPurchaseOrder(order: PurchaseOrder | null | undefined) {
+    return Boolean(
+      order &&
+        canEditOrder &&
+        order.status !== "cancelled" &&
+        (order.status !== "received" || canApprove),
+    );
+  }
+
+  const currentEditOrder =
+    orders.find((order) => order.id === editingOrderId) ?? selectedOrder;
+  const canEditCurrentOrder = canEditPurchaseOrder(currentEditOrder);
+
   const updateCreatedAtRange = useCallback(
     (value: { from: string; to: string }) => {
       setCreatedAtRange(value);
@@ -211,6 +227,38 @@ export function PurchaseManagement({
     },
     [setCreatedAtRange],
   );
+  function applyPurchaseFilterValues(values: PurchaseFilterValues) {
+    setDraftQuery(values.query);
+    setDraftProductFilterQuery(values.productQuery);
+    setDraftStatusFilters(values.statuses);
+    setQuery(values.query);
+    setProductFilterQuery(values.productQuery);
+    setStatusFilters(values.statuses);
+    setPage(0);
+  }
+
+  function schedulePurchaseFilterApply(values: PurchaseFilterValues) {
+    if (filterApplyTimerRef.current !== null)
+      window.clearTimeout(filterApplyTimerRef.current);
+    filterApplyTimerRef.current = window.setTimeout(() => {
+      filterApplyTimerRef.current = null;
+      applyPurchaseFilterValues(values);
+    }, 300);
+  }
+
+  function clearPurchaseFilters() {
+    if (filterApplyTimerRef.current !== null) {
+      window.clearTimeout(filterApplyTimerRef.current);
+      filterApplyTimerRef.current = null;
+    }
+    applyPurchaseFilterValues({
+      query: "",
+      productQuery: "",
+      statuses: ["pending", "received"],
+    });
+    updateCreatedAtRange({ from: "", to: "" });
+  }
+
   const updateSort = useCallback(
     (value: DataTableSort) => {
       setSort(value);
@@ -231,20 +279,13 @@ export function PurchaseManagement({
     setFiltersOpen(true);
   }, [filtersOpen, productFilterQuery, query, statusFilters]);
 
-  const applyPurchaseFilters = useCallback(() => {
-    setQuery(draftQuery);
-    setProductFilterQuery(draftProductFilterQuery);
-    setStatusFilters(draftStatusFilters);
-    setPage(0);
-    setFiltersOpen(false);
-  }, [
-    draftProductFilterQuery,
-    draftQuery,
-    draftStatusFilters,
-    setProductFilterQuery,
-    setQuery,
-    setStatusFilters,
-  ]);
+  useEffect(
+    () => () => {
+      if (filterApplyTimerRef.current !== null)
+        window.clearTimeout(filterApplyTimerRef.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     const readUrlFilters = (useDefaultsWhenEmpty: boolean) => {
@@ -329,8 +370,8 @@ export function PurchaseManagement({
         p_to: createdAtRange.to || null,
         p_sort: sort.key,
         p_direction: sort.direction,
-        p_query: debouncedQuery,
-        p_product_query: debouncedProductFilterQuery,
+        p_query: query,
+        p_product_query: productFilterQuery,
         p_statuses: statusFilters,
         p_limit: limit,
         p_offset: offset,
@@ -349,8 +390,8 @@ export function PurchaseManagement({
     [
       createdAtRange.from,
       createdAtRange.to,
-      debouncedQuery,
-      debouncedProductFilterQuery,
+      query,
+      productFilterQuery,
       sort.direction,
       sort.key,
       statusFilters,
@@ -408,8 +449,8 @@ export function PurchaseManagement({
                 canViewCost,
                 createdAtRange.from,
                 createdAtRange.to,
-                debouncedQuery,
-                debouncedProductFilterQuery,
+                query,
+                productFilterQuery,
                 statusFilters,
                 sort.key,
                 sort.direction,
@@ -465,8 +506,8 @@ export function PurchaseManagement({
     canViewCost,
     canListOrders,
     createdAtRange,
-    debouncedQuery,
-    debouncedProductFilterQuery,
+    query,
+    productFilterQuery,
     statusFilters,
     sort,
     page,
@@ -488,6 +529,7 @@ export function PurchaseManagement({
         queryKey: ["product-inventory-history"],
       }),
       queryClient.invalidateQueries({ queryKey: ["products"] }),
+      queryClient.invalidateQueries({ queryKey: ["pos-products"] }),
     ]);
     await load();
   };
@@ -748,7 +790,7 @@ export function PurchaseManagement({
   }
 
   function addPurchaseProduct(product: PurchaseProduct) {
-    if (editingOrderId ? !canEditOrder : !canCreate) return;
+    if (editingOrderId ? !canEditCurrentOrder : !canCreate) return;
     purchaseForm.setValue(
       "lines",
       [
@@ -977,7 +1019,7 @@ export function PurchaseManagement({
   }
 
   async function editOrder(order: PurchaseOrder) {
-    if (order.status === "cancelled" || !canEditOrder) return;
+    if (!canEditPurchaseOrder(order)) return;
     detailModal.close();
     setSelectedItems([]);
     setSelectedOrder(order);
@@ -1034,9 +1076,8 @@ export function PurchaseManagement({
   }
 
   async function saveEdit(values: PurchaseFormValues) {
-    if (!canEditOrder) return;
     const order = orders.find((item) => item.id === editingOrderId);
-    if (!order || order.status === "cancelled" || busy) return;
+    if (!canEditPurchaseOrder(order) || !order || busy) return;
     if (
       !values.lines.length ||
       values.lines.some(
@@ -1076,7 +1117,7 @@ export function PurchaseManagement({
   }
 
   function updateEditLine(id: string, updates: Partial<PurchaseLine>) {
-    if (!canEditOrder) return;
+    if (!canEditCurrentOrder) return;
     const prior = priceWrites.current.get(id) || Promise.resolve();
     const task = prior
       .catch(() => undefined)
@@ -1093,7 +1134,7 @@ export function PurchaseManagement({
   }
 
   function removePurchaseLine(id: string) {
-    if (editingOrderId ? !canEditOrder : !canCreate) return;
+    if (editingOrderId ? !canEditCurrentOrder : !canCreate) return;
     if (editingOrderId)
       purchaseForm.setValue(
         "lines",
@@ -1276,8 +1317,22 @@ export function PurchaseManagement({
                         aria-label="Tìm mã đơn nhập"
                         placeholder="Mã đơn nhập"
                         value={draftQuery}
-                        onChange={setDraftQuery}
-                        onClear={() => setDraftQuery("")}
+                        onChange={(value) => {
+                          setDraftQuery(value);
+                          schedulePurchaseFilterApply({
+                            query: value,
+                            productQuery: draftProductFilterQuery,
+                            statuses: draftStatusFilters,
+                          });
+                        }}
+                        onClear={() => {
+                          setDraftQuery("");
+                          schedulePurchaseFilterApply({
+                            query: "",
+                            productQuery: draftProductFilterQuery,
+                            statuses: draftStatusFilters,
+                          });
+                        }}
                       />
                     </label>
                     <label className="form-label">
@@ -1287,8 +1342,22 @@ export function PurchaseManagement({
                         aria-label="Tìm hàng hóa trong đơn nhập"
                         placeholder="Tìm tên hoặc mã hàng hóa"
                         value={draftProductFilterQuery}
-                        onChange={setDraftProductFilterQuery}
-                        onClear={() => setDraftProductFilterQuery("")}
+                        onChange={(value) => {
+                          setDraftProductFilterQuery(value);
+                          schedulePurchaseFilterApply({
+                            query: draftQuery,
+                            productQuery: value,
+                            statuses: draftStatusFilters,
+                          });
+                        }}
+                        onClear={() => {
+                          setDraftProductFilterQuery("");
+                          schedulePurchaseFilterApply({
+                            query: draftQuery,
+                            productQuery: "",
+                            statuses: draftStatusFilters,
+                          });
+                        }}
                       />
                     </label>
                   </div>
@@ -1298,7 +1367,14 @@ export function PurchaseManagement({
                       ariaLabel="Trạng thái đơn nhập"
                       isMulti
                       value={draftStatusFilters}
-                      onChange={setDraftStatusFilters}
+                      onChange={(statuses) => {
+                        setDraftStatusFilters(statuses);
+                        schedulePurchaseFilterApply({
+                          query: draftQuery,
+                          productQuery: draftProductFilterQuery,
+                          statuses,
+                        });
+                      }}
                       options={[
                         { value: "pending", label: "Đợi duyệt" },
                         { value: "received", label: "Đã nhập hàng" },
@@ -1309,11 +1385,11 @@ export function PurchaseManagement({
                   </label>
                   <div className="orders-filter-actions">
                     <AppButton
-                      variant="primary"
+                      variant="ghost"
                       type="button"
-                      onClick={applyPurchaseFilters}
+                      onClick={clearPurchaseFilters}
                     >
-                      Áp dụng
+                      Xóa bộ lọc
                     </AppButton>
                   </div>
                 </div>
@@ -1949,7 +2025,7 @@ export function PurchaseManagement({
                 </div>
               </div>
               <div style={{ display: "flex", alignItems: "center" }}>
-                {canEditOrder && selectedOrder.status !== "cancelled" && (
+                {canEditPurchaseOrder(selectedOrder) && (
                   <AppButton
                     variant="ghost"
                     type="button"

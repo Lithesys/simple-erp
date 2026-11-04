@@ -21,7 +21,7 @@ import { formatDateTime } from "@/lib/date";
 import { printPage } from "@/lib/print-page";
 import { AppSelect } from "@/components/app-select";
 import { useQueryClient } from "@tanstack/react-query";
-import { fetchCachedQuery } from "@/lib/query-cache";
+import { fetchCachedQuery, QUERY_STALE_TIME } from "@/lib/query-cache";
 import type { CartLine, PriceList, Product } from "@/lib/types";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { Controller, useForm } from "react-hook-form";
@@ -129,7 +129,7 @@ export function PointOfSale({ canEditPrice }: { canEditPrice: boolean }) {
   }, [activeOrder]);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(max-width: 720px)");
+    const mediaQuery = window.matchMedia("screen and (max-width: 720px)");
     const syncViewport = () => setIsMobileViewport(mediaQuery.matches);
     syncViewport();
     mediaQuery.addEventListener("change", syncViewport);
@@ -218,19 +218,32 @@ export function PointOfSale({ canEditPrice }: { canEditPrice: boolean }) {
         } = await supabase.auth.getSession();
         const userId = session?.user.id;
         if (!userId) return null;
+        let cached: Awaited<ReturnType<typeof readPosSearchCache>> = null;
         try {
-          const cached = await readPosSearchCache(userId);
-          if (cached) {
-            setProducts(cached.products);
-            setPriceLists(cached.priceLists);
-          }
+          cached = await readPosSearchCache(userId);
         } catch {
           // IndexedDB is an optional offline/instant-search layer.
         }
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ["pos-products"] }),
-          queryClient.invalidateQueries({ queryKey: ["active-price-lists"] }),
+        const cachedProducts = queryClient.getQueryData<Product[]>([
+          "pos-products",
+          userId,
         ]);
+        const cachedLists = queryClient.getQueryData<PriceList[]>([
+          "active-price-lists",
+          userId,
+        ]);
+        if (cachedProducts) setProducts(cachedProducts);
+        else if (cached) setProducts(cached.products);
+        if (cachedLists) setPriceLists(cachedLists);
+        else if (cached) setPriceLists(cached.priceLists);
+
+        const customersSavedAt =
+          cached?.customersSavedAt ?? cached?.savedAt ?? 0;
+        const shouldRefreshCustomers =
+          refreshCustomers &&
+          (!cached ||
+            !customersSavedAt ||
+            Date.now() - customersSavedAt >= QUERY_STALE_TIME);
         const loadAllProducts = async () => {
           const all: Product[] = [];
           for (let offset = 0; ; offset += 500) {
@@ -281,7 +294,7 @@ export function PointOfSale({ canEditPrice }: { canEditPrice: boolean }) {
             userId,
             nextProducts,
             nextListsTyped,
-            refreshCustomers,
+            shouldRefreshCustomers,
           );
         } catch {
           customersSynced = false;
