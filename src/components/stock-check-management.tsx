@@ -30,6 +30,7 @@ import {
 import { productDetailsHrefForRoute } from "@/lib/management-navigation";
 import { createClient } from "@/lib/data/client";
 import { formatDateTime } from "@/lib/date";
+import { printPage } from "@/lib/print-page";
 import { formatQuantity, formatVnd } from "@/lib/format";
 import { createCsv, downloadCsvFile } from "@/lib/csv-export";
 import {
@@ -1440,7 +1441,7 @@ export function StockCheckManagement({
               <AppButton
                 variant="secondary"
                 type="button"
-                onClick={() => window.print()}
+                onClick={printPage}
               >
                 <span className="stock-check-detail-footer-label">
                   <Printer size={15} aria-hidden="true" />

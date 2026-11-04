@@ -18,6 +18,7 @@ import { SearchInputField } from "@/components/search-input-field";
 import { NumberInputField } from "@/components/number-input-field";
 import { PosCartLine } from "@/components/pos-cart-line";
 import { formatDateTime } from "@/lib/date";
+import { printPage } from "@/lib/print-page";
 import { AppSelect } from "@/components/app-select";
 import { useQueryClient } from "@tanstack/react-query";
 import { fetchCachedQuery } from "@/lib/query-cache";
@@ -653,7 +654,7 @@ export function PointOfSale({ canEditPrice }: { canEditPrice: boolean }) {
     setDiscountInputVersion((version) => version + 1);
     setRetryKey(null);
     toast.success("Thanh toán thành công · " + result.order_no);
-    window.setTimeout(() => window.print(), 300);
+    window.setTimeout(printPage, 300);
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["pos-products"] }),
       queryClient.invalidateQueries({ queryKey: ["purchase-products"] }),
@@ -700,7 +701,7 @@ export function PointOfSale({ canEditPrice }: { canEditPrice: boolean }) {
       items: draftCart,
     });
     setDraftPrint(true);
-    window.setTimeout(() => window.print(), 300);
+    window.setTimeout(printPage, 300);
   }
 
   const submitPayment = handleSaleSubmit(pay);
@@ -1095,7 +1096,7 @@ export function PointOfSale({ canEditPrice }: { canEditPrice: boolean }) {
                 variant="primary"
                 className="btn-print"
                 aria-label="In hóa đơn"
-                onClick={() => window.print()}
+                onClick={printPage}
               >
                 In hóa đơn
               </AppButton>

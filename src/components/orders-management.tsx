@@ -36,6 +36,7 @@ import { MobileTableToolbarMetrics } from "@/components/mobile-table-toolbar-met
 import { useDialogBehavior } from "@/lib/use-dialog-behavior";
 import { NumberInputField } from "@/components/number-input-field";
 import { formatDateTime } from "@/lib/date";
+import { printPage } from "@/lib/print-page";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
@@ -1235,7 +1236,7 @@ export function OrdersManagement({
     });
     void load(page, size, filters);
     if (autoPrintSettingReady && autoPrint) {
-      window.setTimeout(() => window.print(), 300);
+      window.setTimeout(printPage, 300);
     }
   }
   async function cancelOrder() {
@@ -3114,7 +3115,7 @@ export function OrdersManagement({
                     variant="primary"
                     type="button"
 
-                    onClick={() => window.print()}
+                    onClick={printPage}
                   >
                     In
                   </AppButton>

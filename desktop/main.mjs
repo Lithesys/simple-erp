@@ -777,6 +777,16 @@ function registerIpc() {
   ipcMain.handle("desktop:check-updates", async (event) => { authorizeFrame(event); if (!app.isPackaged) return sendUpdateState({ status: "development" }); return autoUpdater.checkForUpdates(); });
   ipcMain.handle("desktop:download-update", async (event) => { authorizeFrame(event); return autoUpdater.downloadUpdate(); });
   ipcMain.handle("desktop:install-update", async (event) => { authorizeFrame(event); await waitForDatabaseIdle(); autoUpdater.quitAndInstall(false, true); });
+  ipcMain.handle("desktop:print-page", (event) => {
+    authorizeFrame(event);
+    return new Promise((resolve) => {
+      event.sender.print({ silent: true, printBackground: true }, (success, failureReason) => {
+        resolve(success
+          ? { ok: true }
+          : { ok: false, message: failureReason || "Could not print to the default printer." });
+      });
+    });
+  });
 }
 
 function validateConfig(config) {

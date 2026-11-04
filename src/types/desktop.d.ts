@@ -14,6 +14,7 @@ declare global {
       checkForUpdates(): Promise<unknown>;
       downloadUpdate(): Promise<unknown>;
       installUpdate(): Promise<void>;
+      printPage(): Promise<{ ok: boolean; message?: string }>;
       onUpdateState(listener: (state: DesktopUpdateState) => void): () => void;
     };
   }

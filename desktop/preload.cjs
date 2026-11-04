@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld("erpDesktop", {
   checkForUpdates: () => ipcRenderer.invoke("desktop:check-updates"),
   downloadUpdate: () => ipcRenderer.invoke("desktop:download-update"),
   installUpdate: () => ipcRenderer.invoke("desktop:install-update"),
+  printPage: () => ipcRenderer.invoke("desktop:print-page"),
   onUpdateState: (listener) => {
     listeners.add(listener);
     return () => listeners.delete(listener);
