@@ -189,16 +189,30 @@ async function migrationFiles() {
     .sort((left, right) => left.localeCompare(right));
 }
 
-async function readSupabaseMigrationVersions(client) {
+function migrationSlug(name) {
+  return name.replace(/^\d+_/, "").replace(/\.sql$/, "");
+}
+
+async function readSupabaseMigrationHistory(client) {
   try {
     const history = await client.query(
       "SELECT to_regclass('supabase_migrations.schema_migrations') AS relation",
     );
     if (!history.rows[0]?.relation) return null;
-    const { rows } = await client.query(
-      "SELECT version::text AS version FROM supabase_migrations.schema_migrations",
-    );
-    return new Set(rows.map((row) => String(row.version)));
+    try {
+      const { rows } = await client.query(
+        "SELECT version::text AS version, name FROM supabase_migrations.schema_migrations",
+      );
+      return {
+        versions: new Set(rows.map((row) => String(row.version))),
+        names: new Set(rows.map((row) => String(row.name || "")).filter(Boolean)),
+      };
+    } catch {
+      const { rows } = await client.query(
+        "SELECT version::text AS version FROM supabase_migrations.schema_migrations",
+      );
+      return { versions: new Set(rows.map((row) => String(row.version))), names: new Set() };
+    }
   } catch {
     return null;
   }
@@ -206,6 +220,10 @@ async function readSupabaseMigrationVersions(client) {
 
 async function migrationStatus(client) {
   const files = await migrationFiles();
+  const supabaseHistory = await readSupabaseMigrationHistory(client);
+  const isAppliedInSupabase = (name) => supabaseHistory && (
+    supabaseHistory.versions.has(name.split("_")[0]) || supabaseHistory.names.has(migrationSlug(name))
+  );
   const history = await client.query(
     "SELECT to_regclass('private.desktop_schema_migrations') AS relation",
   );
@@ -214,12 +232,17 @@ async function migrationStatus(client) {
       "SELECT name FROM private.desktop_schema_migrations",
     );
     const applied = new Set(rows.map((row) => row.name));
-    return { migrations: files.filter((name) => !applied.has(name)), source: "desktop" };
-  }
-  const supabaseVersions = await readSupabaseMigrationVersions(client);
-  if (supabaseVersions) {
+    const appliedSlugs = new Set([...applied].map(migrationSlug));
     return {
-      migrations: files.filter((name) => !supabaseVersions.has(name.split("_")[0])),
+      migrations: files.filter((name) => !applied.has(name)
+        && !appliedSlugs.has(migrationSlug(name))
+        && !isAppliedInSupabase(name)),
+      source: "desktop",
+    };
+  }
+  if (supabaseHistory) {
+    return {
+      migrations: files.filter((name) => !isAppliedInSupabase(name)),
       source: "supabase",
     };
   }
@@ -232,9 +255,6 @@ async function runMigrations(client, onProgress = () => {}) {
     .filter((name) => name.endsWith(".sql"))
     .sort((left, right) => left.localeCompare(right));
   await client.query("CREATE SCHEMA IF NOT EXISTS private");
-  const existingLedger = await client.query(
-    "SELECT to_regclass('private.desktop_schema_migrations') AS relation",
-  );
   await client.query(`
     CREATE TABLE IF NOT EXISTS private.desktop_schema_migrations (
       name text PRIMARY KEY,
@@ -245,18 +265,21 @@ async function runMigrations(client, onProgress = () => {}) {
     "SELECT name FROM private.desktop_schema_migrations",
   );
   const applied = new Set(appliedRows.map((row) => row.name));
-  if (!existingLedger.rows[0]?.relation && applied.size === 0) {
-    const versions = await readSupabaseMigrationVersions(client);
-    if (versions) {
-      for (const name of files) {
-        if (!versions.has(name.split("_")[0])) continue;
-        await client.query(
-          "INSERT INTO private.desktop_schema_migrations(name) VALUES($1) ON CONFLICT DO NOTHING",
-          [name],
-        );
-        applied.add(name);
-      }
-    }
+  const appliedSlugs = new Set([...applied].map(migrationSlug));
+  const supabaseHistory = await readSupabaseMigrationHistory(client);
+  for (const name of files) {
+    const slug = migrationSlug(name);
+    const appliedInSupabase = supabaseHistory && (
+      supabaseHistory.versions.has(name.split("_")[0]) || supabaseHistory.names.has(slug)
+    );
+    if (!appliedInSupabase && !applied.has(name) && !appliedSlugs.has(slug)) continue;
+    if (applied.has(name)) continue;
+    await client.query(
+      "INSERT INTO private.desktop_schema_migrations(name) VALUES($1) ON CONFLICT DO NOTHING",
+      [name],
+    );
+    applied.add(name);
+    appliedSlugs.add(slug);
   }
   const embedded = typeof client.exec === "function";
   for (let index = 0; index < files.length; index += 1) {
