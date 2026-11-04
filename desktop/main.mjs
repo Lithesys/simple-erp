@@ -32,6 +32,9 @@ let lastError = "";
 let quitting = false;
 let appPort = 43130;
 let updateState = { status: "idle", currentVersion: app.getVersion() };
+let updateCheckPromise = null;
+let updateDownloadPromise = null;
+let updateInstallStarted = false;
 let pending = new Map();
 let requestCounter = 0;
 let activeDatabaseOperations = 0;
@@ -683,16 +686,59 @@ function waitForAppServer() {
   });
 }
 
+function checkForUpdates() {
+  if (!app.isPackaged) {
+    sendUpdateState({ status: "development" });
+    return Promise.resolve(null);
+  }
+  if (updateCheckPromise) return updateCheckPromise;
+  if (updateDownloadPromise || updateInstallStarted) return Promise.resolve(null);
+
+  updateCheckPromise = autoUpdater.checkForUpdates()
+    .catch((error) => {
+      sendUpdateState({ status: "error", message: sanitizeError(error) });
+      return null;
+    })
+    .finally(() => { updateCheckPromise = null; });
+  return updateCheckPromise;
+}
+
+function downloadAvailableUpdate(version) {
+  if (updateDownloadPromise || updateInstallStarted) return;
+  sendUpdateState({ status: "downloading", percent: 0, availableVersion: version });
+  updateDownloadPromise = autoUpdater.downloadUpdate()
+    .catch((error) => sendUpdateState({ status: "error", message: sanitizeError(error) }))
+    .finally(() => { updateDownloadPromise = null; });
+}
+
+function installDownloadedUpdate(version) {
+  if (updateInstallStarted) return;
+  updateInstallStarted = true;
+  sendUpdateState({ status: "installing", availableVersion: version });
+  void waitForDatabaseIdle()
+    .then(() => autoUpdater.quitAndInstall(true, true))
+    .catch((error) => {
+      updateInstallStarted = false;
+      sendUpdateState({ status: "error", message: sanitizeError(error) });
+    });
+}
+
 function registerUpdater() {
   autoUpdater.autoDownload = false;
   autoUpdater.autoInstallOnAppQuit = false;
   autoUpdater.on("checking-for-update", () => sendUpdateState({ status: "checking" }));
-  autoUpdater.on("update-available", (info) => sendUpdateState({ status: "available", availableVersion: info.version }));
+  autoUpdater.on("update-available", (info) => {
+    sendUpdateState({ status: "available", availableVersion: info.version });
+    downloadAvailableUpdate(info.version);
+  });
   autoUpdater.on("update-not-available", (info) => sendUpdateState({ status: "current", availableVersion: info.version }));
   autoUpdater.on("download-progress", (progress) => sendUpdateState({ status: "downloading", percent: progress.percent }));
-  autoUpdater.on("update-downloaded", (info) => sendUpdateState({ status: "downloaded", availableVersion: info.version }));
+  autoUpdater.on("update-downloaded", (info) => installDownloadedUpdate(info.version));
   autoUpdater.on("error", (error) => sendUpdateState({ status: "error", message: sanitizeError(error) }));
-  if (app.isPackaged) void autoUpdater.checkForUpdates().catch((error) => sendUpdateState({ status: "error", message: sanitizeError(error) }));
+  if (app.isPackaged) {
+    windowInstance?.on("focus", () => { void checkForUpdates(); });
+    void checkForUpdates();
+  }
 }
 
 function registerIpc() {
@@ -774,9 +820,7 @@ function registerIpc() {
       switchingDatabase = false;
     }
   });
-  ipcMain.handle("desktop:check-updates", async (event) => { authorizeFrame(event); if (!app.isPackaged) return sendUpdateState({ status: "development" }); return autoUpdater.checkForUpdates(); });
-  ipcMain.handle("desktop:download-update", async (event) => { authorizeFrame(event); return autoUpdater.downloadUpdate(); });
-  ipcMain.handle("desktop:install-update", async (event) => { authorizeFrame(event); await waitForDatabaseIdle(); autoUpdater.quitAndInstall(false, true); });
+  ipcMain.handle("desktop:check-updates", (event) => { authorizeFrame(event); return checkForUpdates(); });
   ipcMain.handle("desktop:print-page", (event) => {
     authorizeFrame(event);
     return new Promise((resolve) => {

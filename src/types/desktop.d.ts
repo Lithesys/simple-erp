@@ -12,8 +12,6 @@ declare global {
         recovery: boolean,
       ): Promise<{ ok: boolean }>;
       checkForUpdates(): Promise<unknown>;
-      downloadUpdate(): Promise<unknown>;
-      installUpdate(): Promise<void>;
       printPage(): Promise<{ ok: boolean; message?: string }>;
       onUpdateState(listener: (state: DesktopUpdateState) => void): () => void;
     };
@@ -45,7 +43,7 @@ export interface DesktopUpdateState {
     | "current"
     | "available"
     | "downloading"
-    | "downloaded"
+    | "installing"
     | "error"
     | "development";
   currentVersion?: string;

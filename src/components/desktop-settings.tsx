@@ -187,20 +187,6 @@ export function DesktopDatabaseSettings({
     }
   }
 
-  async function downloadUpdate() {
-    setBusy(true);
-    try {
-      await window.erpDesktop?.downloadUpdate();
-    } catch (error) {
-      setUpdate({
-        status: "error",
-        message: error instanceof Error ? error.message : "Update download failed.",
-      });
-    } finally {
-      setBusy(false);
-    }
-  }
-
   if (!desktop) {
     return recovery ? (
       <section className="desktop-settings-card card">
@@ -400,30 +386,21 @@ export function DesktopDatabaseSettings({
             <div>
               <h2>Cập nhật ứng dụng</h2>
               <p>Phiên bản hiện tại: {update.currentVersion || state?.appVersion || "—"}</p>
+              <p>Tự kiểm tra khi quay lại ứng dụng; bản mới sẽ tự tải, cài đặt và khởi động lại.</p>
             </div>
           </header>
           <div className="desktop-settings-actions">
-            <AppButton variant="secondary" type="button" disabled={busy || update.status === "downloading"} onClick={() => void checkUpdates()}>
+            <AppButton variant="secondary" type="button" disabled={busy || update.status === "checking" || update.status === "downloading" || update.status === "installing"} onClick={() => void checkUpdates()}>
               Kiểm tra cập nhật
             </AppButton>
-            {update.status === "available" && (
-              <AppButton variant="primary" disabled={busy} onClick={() => void downloadUpdate()}>
-                Tải phiên bản {update.availableVersion}
-              </AppButton>
-            )}
-            {update.status === "downloaded" && (
-              <AppButton variant="primary" onClick={() => void window.erpDesktop?.installUpdate()}>
-                Cài đặt và khởi động lại
-              </AppButton>
-            )}
           </div>
           {update.status === "checking" && <p className="desktop-feedback">Đang kiểm tra phiên bản mới…</p>}
           {update.status === "current" && <p className="desktop-feedback desktop-feedback-ok">Bạn đang dùng phiên bản mới nhất.</p>}
-          {update.status === "available" && <p className="desktop-feedback">Có phiên bản {update.availableVersion}.</p>}
+          {update.status === "available" && <p className="desktop-feedback">Có phiên bản {update.availableVersion}, đang chuẩn bị tải…</p>}
           {update.status === "downloading" && (
             <p className="desktop-feedback">Đang tải cập nhật: {Math.round(update.percent || 0)}%</p>
           )}
-          {update.status === "downloaded" && <p className="desktop-feedback desktop-feedback-ok">Bản cập nhật đã tải xong.</p>}
+          {update.status === "installing" && <p className="desktop-feedback">Đang cài cập nhật. Ứng dụng sẽ tự khởi động lại.</p>}
           {update.status === "error" && <p className="desktop-feedback desktop-feedback-error" role="alert">{update.message}</p>}
           {update.status === "development" && <p className="desktop-feedback">Cập nhật kiểm tra được trong bản cài đặt.</p>}
         </section>
