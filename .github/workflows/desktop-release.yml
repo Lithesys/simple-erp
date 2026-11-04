@@ -34,6 +34,21 @@ jobs:
           DESKTOP_RELEASE_REPO: ${{ vars.DESKTOP_RELEASE_REPO || 'simple-erp' }}
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+      - name: Match installer names to update metadata
+        shell: pwsh
+        run: |
+          $version = $env:GITHUB_REF_NAME.Substring(1)
+          $installer = Get-ChildItem release -File -Filter '*.exe' | Select-Object -First 1
+          $blockmap = Get-ChildItem release -File -Filter '*.exe.blockmap' | Select-Object -First 1
+          if (-not $installer -or -not $blockmap) { throw 'The installer or its blockmap was not produced.' }
+          $installerName = "ERP-Setup-$version.exe"
+          $blockmapName = "$installerName.blockmap"
+          if ($installer.Name -ne $installerName) {
+            Move-Item -LiteralPath $installer.FullName -Destination (Join-Path $installer.DirectoryName $installerName)
+          }
+          if ($blockmap.Name -ne $blockmapName) {
+            Move-Item -LiteralPath $blockmap.FullName -Destination (Join-Path $blockmap.DirectoryName $blockmapName)
+          }
       - name: Publish one release with all installer assets
         uses: softprops/action-gh-release@v2
         with:
