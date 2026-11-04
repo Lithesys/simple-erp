@@ -10,8 +10,8 @@
 ## Chạy bản web
 
 ```powershell
-git clone https://github.com/Lithesys/erp-landuylinh-release.git
-cd erp-landuylinh-release
+git clone https://github.com/Lithesys/simple-erp.git
+cd simple-erp
 npm ci
 Copy-Item .env.example .env.local
 ```
@@ -51,7 +51,7 @@ git tag vX.Y.Z
 git push origin vX.Y.Z
 ```
 
-GitHub Actions build installer Windows và đưa file cài cùng metadata cập nhật lên GitHub Releases. Repository phát hành mặc định là `Lithesys/erp-landuylinh-release`. Không thêm token phát hành hay chứng thư ký ứng dụng vào mã nguồn; dùng GitHub Actions secrets nếu cần quyền hoặc ký code.
+GitHub Actions build installer Windows và đưa file cài cùng metadata cập nhật lên GitHub Releases. Repository phát hành mặc định là `Lithesys/simple-erp`. Không thêm token phát hành hay chứng thư ký ứng dụng vào mã nguồn; dùng GitHub Actions secrets nếu cần quyền hoặc ký code.
 
 ## Lệnh kiểm tra
 

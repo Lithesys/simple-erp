@@ -26,12 +26,12 @@ jobs:
       - run: npm run desktop:build:assets
         env:
           DESKTOP_RELEASE_OWNER: ${{ vars.DESKTOP_RELEASE_OWNER || 'Lithesys' }}
-          DESKTOP_RELEASE_REPO: ${{ vars.DESKTOP_RELEASE_REPO || 'erp-landuylinh-release' }}
+          DESKTOP_RELEASE_REPO: ${{ vars.DESKTOP_RELEASE_REPO || 'simple-erp' }}
       - name: Build and publish the installer
         run: npx electron-builder --config electron-builder.config.cjs --win nsis --publish always
         env:
           GH_TOKEN: ${{ secrets.DESKTOP_PUBLISH_TOKEN || secrets.GITHUB_TOKEN }}
           DESKTOP_RELEASE_OWNER: ${{ vars.DESKTOP_RELEASE_OWNER || 'Lithesys' }}
-          DESKTOP_RELEASE_REPO: ${{ vars.DESKTOP_RELEASE_REPO || 'erp-landuylinh-release' }}
+          DESKTOP_RELEASE_REPO: ${{ vars.DESKTOP_RELEASE_REPO || 'simple-erp' }}
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}

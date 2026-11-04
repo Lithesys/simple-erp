@@ -2,7 +2,7 @@
 
 ## Tải và cài
 
-1. Mở trang [ERP Releases](https://github.com/Lithesys/erp-landuylinh-release/releases/latest).
+1. Mở trang [ERP Releases](https://github.com/Lithesys/simple-erp/releases/latest).
 2. Trong phần **Assets**, tải file **ERP Setup [phiên bản].exe**.
 3. Mở file vừa tải, làm theo hướng dẫn và chọn vị trí cài nếu Windows hỏi.
 4. Mở **ERP** từ Start Menu. Không cần cài Node.js, PostgreSQL hay Docker.
