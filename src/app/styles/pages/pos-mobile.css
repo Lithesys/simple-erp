@@ -1,0 +1,58 @@
+@media (max-width: 720px) {
+  .pos-shell .pos-screen {
+    height: calc(
+      100dvh - 56px - var(--mobile-nav-height) -
+        env(safe-area-inset-bottom, 0px)
+    );
+    padding: 8px 8px 10px;
+  }
+
+  .pos-shell .pos-left {
+    flex-basis: 38%;
+  }
+
+  .pos-shell .pos-panel {
+    padding: 12px 10px;
+  }
+
+  .pos-shell .field:not(.inline-edit-field) {
+    min-height: var(--control-height-touch);
+    border-radius: var(--radius-panel-subtle);
+  }
+
+  .pos-shell .app-select-control {
+    min-height: var(--control-height-touch) !important;
+    border-radius: var(--radius-panel-subtle) !important;
+  }
+
+  .pos-shell .pos-actions .btn {
+    min-height: var(--control-height-touch);
+  }
+
+  .pos-shell .pos-line {
+    grid-template-columns: 22px minmax(0, 1fr) 84px 34px;
+    min-height: 62px;
+  }
+
+  .pos-shell .pos-line.pos-line-price-editable {
+    grid-template-columns: 20px minmax(0, 1fr) 64px 88px 30px;
+  }
+
+  .pos-shell .pos-line .pos-remove,
+  .pos-shell .pos-line .pos-remove.btn {
+    width: 32px;
+    min-width: 32px;
+    min-height: 36px;
+  }
+
+  .pos-shell .qty-control .btn {
+    width: 28px;
+    min-width: 28px;
+    min-height: 30px;
+  }
+
+  .pos-shell .qty-control input {
+    width: 28px;
+    min-height: 34px;
+  }
+}

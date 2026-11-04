@@ -1,0 +1,319 @@
+/* Shared interaction states are project conventions; see docs/design-system.md. */
+.btn-pay,
+.btn-print,
+.btn-xl {
+  min-height: 50px;
+  padding: 13px 26px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-md);
+  font-weight: var(--weight-medium);
+  line-height: var(--line-height);
+  text-transform: uppercase;
+}
+.btn-print {
+  padding-inline: var(--space-2);
+}
+.btn-text {
+  background: transparent;
+  color: var(--primary);
+  font-weight: var(--weight-regular);
+}
+.btn-primary:hover:not(:disabled),
+.btn-pay:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+.btn-secondary:hover:not(:disabled),
+.btn-print:hover:not(:disabled) {
+  background: var(--secondary-hover);
+}
+.btn-quiet:hover:not(:disabled),
+.btn-text:hover:not(:disabled) {
+  background: var(--primary-subtle);
+}
+:where(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.topbar :where(button, a):focus-visible {
+  outline-color: var(--surface);
+}
+button:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+}
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background: var(--surface-subtle);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+}
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+select:not(:disabled),
+.date-range-field,
+.app-select__control,
+.app-select__indicator,
+.app-select__option {
+  cursor: pointer;
+}
+.field[role="combobox"]:not(.search-input-field .field) {
+  background: var(--surface);
+}
+
+.daterangepicker {
+  z-index: var(--z-modal-popover) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  color: var(--text-primary) !important;
+  font-family: var(--font-family) !important;
+  box-shadow: var(--shadow-card) !important;
+}
+.daterangepicker.opensleft::before,
+.daterangepicker.opensleft::after,
+.daterangepicker.opensright::before,
+.daterangepicker.opensright::after {
+  left: var(--date-range-arrow-left) !important;
+  right: auto !important;
+}
+.daterangepicker table {
+  width: auto;
+  min-width: 0;
+  table-layout: auto;
+}
+.daterangepicker th {
+  padding: 8px 0;
+  border-bottom: 0;
+  text-align: center;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.daterangepicker td {
+  padding: 0;
+  border-bottom: 0;
+}
+.daterangepicker .calendar-table {
+  border: 0 !important;
+  background: var(--surface) !important;
+}
+.daterangepicker select.monthselect:not(:disabled),
+.daterangepicker select.yearselect:not(:disabled) {
+  height: 30px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 12px;
+  cursor: pointer;
+}
+.daterangepicker .calendar-table th.month {
+  white-space: nowrap;
+}
+.daterangepicker select.monthselect {
+  width: auto;
+  min-width: 108px;
+}
+.daterangepicker select.yearselect {
+  width: auto;
+  min-width: 78px;
+}
+.daterangepicker select.monthselect:hover,
+.daterangepicker select.yearselect:hover {
+  border-color: var(--primary);
+}
+.daterangepicker td.off,
+.daterangepicker td.off.in-range,
+.daterangepicker td.off.start-date,
+.daterangepicker td.off.end-date {
+  opacity: 0.4;
+}
+.daterangepicker .calendar-table th.available,
+.daterangepicker .calendar-table td.available,
+.daterangepicker .ranges li,
+.daterangepicker .drp-buttons .btn {
+  cursor: pointer;
+}
+.daterangepicker td.disabled,
+.daterangepicker th.disabled,
+.daterangepicker .calendar-time select.disabled {
+  cursor: not-allowed;
+}
+.daterangepicker td,
+.daterangepicker th {
+  font-size: 12px !important;
+}
+.daterangepicker td.active,
+.daterangepicker td.active:hover,
+.daterangepicker .ranges li.active {
+  background: var(--primary) !important;
+  color: var(--surface) !important;
+}
+.daterangepicker td.in-range {
+  background: var(--primary-subtle) !important;
+  color: var(--text-primary) !important;
+}
+.daterangepicker .drp-buttons {
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid var(--border-subtle) !important;
+}
+.daterangepicker .drp-buttons .drp-selected {
+  font-size: 10px;
+}
+.daterangepicker .drp-buttons .btn {
+  min-height: 30px;
+  margin: 0 !important;
+  border-radius: 6px;
+}
+.daterangepicker .drp-buttons .cancelBtn {
+  order: 0;
+}
+.daterangepicker .drp-buttons .applyBtn {
+  order: 1;
+}
+.daterangepicker .drp-buttons .applyBtn {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.daterangepicker .drp-buttons .cancelBtn {
+  background: var(--surface-subtle);
+  color: var(--text-primary);
+}
+.date-range-field {
+  min-width: 200px;
+}
+.dashboard-date-range-field {
+  max-width: 220px;
+  margin-left: auto;
+}
+.app-select {
+  min-width: 0;
+}
+.Toastify__toast-container {
+  font-family: var(--font-family);
+}
+.Toastify__toast {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-card);
+  font-size: 13px;
+}
+.Toastify__toast--success {
+  color: var(--success);
+}
+.Toastify__toast--error {
+  color: var(--danger);
+}
+
+@media (max-width: 600px) {
+  .daterangepicker.show-calendar {
+    width: min(300px, calc(100vw - 20px)) !important;
+    max-width: calc(100vw - 20px) !important;
+  }
+  .daterangepicker .drp-calendar.right {
+    display: none !important;
+  }
+  .daterangepicker .drp-calendar.left {
+    float: none !important;
+    width: 100% !important;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 8px !important;
+  }
+  .daterangepicker .drp-calendar.left .calendar-table,
+  .daterangepicker .drp-calendar.left .calendar-table table {
+    width: 100%;
+  }
+  .daterangepicker .ranges {
+    float: none !important;
+    width: 100%;
+    margin: 0 !important;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .daterangepicker .ranges ul {
+    display: flex;
+    width: max-content !important;
+    max-width: none;
+    margin: 0;
+  }
+  .daterangepicker .ranges li {
+    flex: 0 0 auto;
+    padding: 10px 8px;
+    white-space: nowrap;
+  }
+}
+.stock-tabs {
+  display: flex;
+  gap: 7px;
+  border-bottom: 1px solid var(--border);
+  margin: 4px 0 12px;
+}
+.stock-tab {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.stock-tab.active {
+  border-bottom-color: var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+}
+.product-expanded {
+  padding: 14px 16px 17px;
+  background: var(--surface-subtle);
+}
+.entity-detail-loading {
+  padding: 8px 0;
+  line-height: 1.5;
+}
+.product-history-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.product-history-toolbar .date-range-field {
+  width: min(360px, 100%);
+}
+.product-row {
+  cursor: pointer;
+}
+.product-row:hover {
+  background: var(--surface-subtle);
+}
+.purchase-lines {
+  display: grid;
+  gap: 8px;
+}
+.purchase-line {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 105px 145px 36px;
+  align-items: end;
+  gap: 8px;
+}
+.purchase-summary {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 13px;
+}
+@media (max-width: 720px) {
+  .purchase-line {
+    grid-template-columns: minmax(0, 1fr) 1fr;
+  }
+}

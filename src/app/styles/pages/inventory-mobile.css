@@ -1,0 +1,174 @@
+@media (max-width: 720px) {
+  .mobile-product-list .stock-tabs {
+    order: 1;
+    flex-wrap: wrap;
+    margin: 4px 0 0;
+    border-top: 1px solid var(--border-subtle);
+    border-bottom: 0;
+    padding-top: 9px;
+  }
+
+  .app-shell.mobile-route .product-history-toolbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+
+  .app-shell.mobile-route .product-history-toolbar .date-range-field {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .app-shell.mobile-route .inventory-history-mobile {
+    display: grid;
+    min-width: 0;
+    gap: 8px;
+  }
+
+  .inventory-history-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 12px;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-panel-subtle);
+    background: var(--surface-subtle);
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+  }
+
+  .inventory-history-summary strong {
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .inventory-history-cards {
+    display: grid;
+    min-width: 0;
+    gap: 8px;
+  }
+
+  .inventory-history-card {
+    display: grid;
+    min-width: 0;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-mobile-card);
+    background: var(--surface);
+    color: var(--text-primary);
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+
+  .inventory-history-card--cancelled {
+    border: 2px solid var(--danger);
+  }
+
+  .inventory-history-card--interactive {
+    cursor: pointer;
+    transition:
+      border-color 140ms ease,
+      background-color 140ms ease;
+  }
+
+  .inventory-history-card--interactive:hover {
+    border-color: var(--primary-border);
+    background: var(--surface-subtle);
+  }
+
+  .inventory-history-card--cancelled.inventory-history-card--interactive:hover {
+    border-color: var(--danger);
+  }
+
+  .inventory-history-card--cancelled.inventory-history-card--interactive:active {
+    border: 3px solid var(--danger);
+    box-shadow: 0 0 0 2px var(--danger-subtle);
+  }
+
+  .inventory-history-card--interactive:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  .inventory-history-card-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 5px 10px;
+    min-width: 0;
+  }
+
+  .inventory-history-card-heading time {
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .inventory-history-source-hint {
+    color: var(--primary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--weight-medium);
+  }
+
+  .inventory-history-counterparty {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .inventory-history-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .inventory-history-metrics > div {
+    display: grid;
+    min-width: 0;
+    gap: 4px;
+    padding: 9px;
+    border-radius: var(--radius-panel-subtle);
+    background: var(--surface-subtle);
+  }
+
+  .inventory-history-metrics span,
+  .inventory-history-detail > span:first-child {
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+  }
+
+  .inventory-history-metrics strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .inventory-history-detail {
+    display: grid;
+    grid-template-columns: minmax(0, 110px) minmax(0, 1fr);
+    align-items: start;
+    gap: 8px;
+    min-width: 0;
+    font-size: var(--font-size-sm);
+  }
+
+  .inventory-history-detail > span:last-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-align: right;
+  }
+
+  .inventory-history-empty {
+    margin: 0;
+    padding: 16px 12px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-mobile-card);
+    background: var(--surface);
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+}

@@ -1,0 +1,103 @@
+/* Single source of truth. See docs/design-system.md before adding tokens. */
+:root {
+  color-scheme: light;
+  --font-family: var(--font-roboto), "Roboto", Helvetica, Arial, sans-serif;
+  --font-size-xs: 10px;
+  --font-size-sm: 13px;
+  --font-size-base: 12px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --line-height: 1.2;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-bold: 700;
+
+  --primary: #0070f4;
+  --secondary: #677484;
+  --text-primary: #15171a;
+  --text-secondary: #525d6a;
+  --text-icon: #292e35;
+  --surface: #ffffff;
+  --surface-subtle: #f7f8f9;
+  --background: #f0f1f3;
+  --background-end: #e8eaed;
+  --page-fill: #f5f6f8;
+  --header-fill: #e4f2ff;
+  --admin-nav: #0875e1;
+  --admin-nav-active: #075bb0;
+
+  /* Project extensions, not measured KiotViet states. */
+  --primary-hover: #005dc9;
+  --secondary-hover: #525d6a;
+  --primary-subtle: #eaf2ff;
+  --border: #dbe1e7;
+  --border-subtle: #eef0f3;
+  --danger: #b64141;
+  --danger-subtle: #fff5f4;
+  --danger-border: #f2d5d2;
+  --success: #318252;
+  --success-subtle: #eaf6ef;
+  --warning: #85581e;
+  --warning-subtle: #fff4dd;
+  --surface-overlay: #ffffff24;
+  --overlay: #10192366;
+  --focus-ring: #0070f426;
+  --print-text: #111111;
+  --print-border: #555555;
+  --opacity-disabled: 0.5;
+
+  --radius-input: 5px;
+  --radius-button: 8px;
+  --radius-lg: 10px;
+  --radius-panel-subtle: 12px;
+  --radius-mobile-card: 16px;
+  --radius-mobile-sheet: 20px;
+  --radius-round: 999px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --shadow-card: 0 4px 10px rgb(0 0 0 / 8%);
+  --shadow-search: 0 0 4px rgb(0 0 0 / 25%);
+  --shadow-focus: 0 0 0 3px var(--focus-ring);
+  --shadow-mobile-nav: 0 -4px 18px rgb(0 0 0 / 6%);
+
+  --utility-bar-height: 48px;
+  --primary-nav-height: 47px;
+  --page-inset: 16px;
+  --filter-panel-width: 264px;
+  --table-row-height: 44px;
+  --control-height-compact: 34px;
+  --control-height-touch: 40px;
+  --mobile-nav-height: 68px;
+
+  /* Layer order: navigation chrome, modals, modal popovers, route feedback. */
+  --z-mobile-nav: 30;
+  --z-mobile-menu-backdrop: 39;
+  --z-mobile-menu: 40;
+  --z-modal: 80;
+  --z-modal-popover: 100;
+  --z-route-transition: 110;
+  --z-route-progress: 111;
+}
+
+/* Tailwind utilities share the same semantic palette as plain CSS. */
+@theme inline {
+  --font-sans: var(--font-family);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-icon: var(--text-icon);
+  --color-surface: var(--surface);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-background: var(--background);
+  --color-background-end: var(--background-end);
+  --color-border: var(--border);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+}
+

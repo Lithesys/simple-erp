@@ -1,0 +1,2 @@
+drop function if exists public.orders_page_filtered(text, text, text[], text[], date, date, text, text, integer, integer, uuid, time without time zone, time without time zone);
+drop function if exists public.orders_summary_filtered(text, text, text[], text[], date, date, uuid, time without time zone, time without time zone);

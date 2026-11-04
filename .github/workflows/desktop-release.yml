@@ -1,0 +1,37 @@
+name: Windows desktop release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Set package version from the release tag
+        shell: pwsh
+        run: |
+          $version = $env:GITHUB_REF_NAME.Substring(1)
+          npm version $version --no-git-tag-version
+      - run: npm run desktop:build:assets
+        env:
+          DESKTOP_RELEASE_OWNER: ${{ vars.DESKTOP_RELEASE_OWNER || 'Lithesys' }}
+          DESKTOP_RELEASE_REPO: ${{ vars.DESKTOP_RELEASE_REPO || 'erp-landuylinh-release' }}
+      - name: Build and publish the installer
+        run: npx electron-builder --config electron-builder.config.cjs --win nsis --publish always
+        env:
+          GH_TOKEN: ${{ secrets.DESKTOP_PUBLISH_TOKEN || secrets.GITHUB_TOKEN }}
+          DESKTOP_RELEASE_OWNER: ${{ vars.DESKTOP_RELEASE_OWNER || 'Lithesys' }}
+          DESKTOP_RELEASE_REPO: ${{ vars.DESKTOP_RELEASE_REPO || 'erp-landuylinh-release' }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}

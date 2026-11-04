@@ -1,0 +1,422 @@
+.purchase-form {
+  width: min(960px, calc(100vw - 32px));
+}
+.purchase-search-row {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+  margin: 13px 0 5px;
+}
+.purchase-search-row .form-label {
+  flex: 1;
+}
+.purchase-search-row {
+  margin-bottom: 5px;
+}
+.purchase-search-row .form-label {
+  gap: 6px;
+}
+.purchase-search-results {
+  position: relative;
+  z-index: 5;
+  display: grid;
+  max-height: 250px;
+  overflow: auto;
+  margin-top: -3px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+.purchase-search-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 42px;
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+}
+.purchase-search-option:hover,
+.purchase-search-option.active {
+  background: var(--primary-subtle);
+}
+.purchase-search-option span:first-child {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+.purchase-search-option b,
+.purchase-search-option small {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.purchase-search-option small {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+.purchase-search-option > span:last-child {
+  white-space: nowrap;
+  font-size: 12px;
+}
+.purchase-search-empty {
+  padding: 10px;
+  font-size: 12px;
+}
+.purchase-lines {
+  display: grid;
+  gap: 0;
+  max-height: 45vh;
+  overflow: auto;
+}
+.purchase-line {
+  display: grid;
+  grid-template-columns:
+    minmax(260px, 1.5fr)
+    64px
+    minmax(150px, 0.9fr)
+    minmax(200px, 1.2fr)
+    34px;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  transition: background-color 0.15s ease;
+}
+.purchase-line:first-child {
+  border-bottom: 1px solid var(--border);
+}
+.purchase-line-header {
+  min-height: 42px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.purchase-line-header > :not(:first-child) {
+  text-align: right;
+}
+.purchase-line:not(.purchase-line-header):hover {
+  background: var(--surface-subtle);
+}
+.purchase-lines.quantity-only .purchase-line {
+  grid-template-columns: minmax(260px, 1fr) 64px 34px;
+  min-width: 0;
+}
+.purchase-lines.quantity-only .purchase-line-header > :not(:first-child) {
+  text-align: left;
+}
+.purchase-product-name {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+  padding-bottom: 0;
+  font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.purchase-detail-product-row--clickable {
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+.purchase-detail-product-row--clickable:hover,
+.purchase-detail-product-row--clickable:focus-visible {
+  background: var(--surface-subtle);
+}
+.purchase-detail-product-row--clickable:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+.purchase-product-name small {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 400;
+}
+.purchase-quantity {
+  min-width: 0;
+}
+.purchase-quantity .field {
+  width: 100%;
+  min-width: 0;
+  padding-inline: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.purchase-cost .field {
+  width: 100%;
+  min-width: 0;
+  padding-inline: 5px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.purchase-cost,
+.purchase-line-total {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.purchase-line-total {
+  font-weight: 600;
+}
+.modal.purchase-detail-modal {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: min(1020px, 100%);
+  min-width: 0;
+  max-height: 90vh;
+  gap: 14px;
+  padding: 22px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.purchase-detail-modal .modal-title {
+  margin-bottom: 0;
+}
+.purchase-detail-table-wrap {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-panel-subtle);
+}
+.purchase-detail-table-wrap > .app-table-shell {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+.purchase-detail-table {
+  width: 100%;
+  min-width: 0 !important;
+  table-layout: fixed;
+}
+.purchase-detail-table th,
+.purchase-detail-table td {
+  padding: 11px 12px;
+}
+.purchase-detail-table.has-cost th:first-child,
+.purchase-detail-table.has-cost td:first-child {
+  width: 36%;
+}
+.purchase-detail-table.has-cost th:nth-child(2),
+.purchase-detail-table.has-cost td:nth-child(2) {
+  width: 16%;
+  text-align: right;
+}
+.purchase-detail-table.has-cost th:nth-child(3),
+.purchase-detail-table.has-cost td:nth-child(3) {
+  width: 22%;
+  text-align: right;
+}
+.purchase-detail-table.has-cost th:nth-child(4),
+.purchase-detail-table.has-cost td:nth-child(4) {
+  width: 26%;
+  text-align: right;
+}
+.purchase-detail-table.without-cost th:first-child,
+.purchase-detail-table.without-cost td:first-child {
+  width: 78%;
+}
+.purchase-detail-table.without-cost th:nth-child(2),
+.purchase-detail-table.without-cost td:nth-child(2) {
+  width: 22%;
+  text-align: right;
+}
+.purchase-detail-table td:not(:first-child) {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.purchase-detail-table td:first-child {
+  overflow-wrap: anywhere;
+}
+.purchase-remove {
+  width: 34px;
+  min-width: 34px;
+  min-height: 34px;
+  padding: 0;
+}
+.purchase-summary {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.purchase-summary b {
+  font-size: 15px;
+}
+.purchase-filters {
+  position: relative;
+  z-index: 3;
+}
+.purchase-filter-panel {
+  max-height: calc(100vh - 150px);
+  overflow: auto;
+}
+.purchase-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.purchase-filter-grid .form-label,
+.purchase-status-filter {
+  min-width: 0;
+  margin: 0;
+}
+.purchase-filter-grid .search-input-field,
+.purchase-filter-grid .plain-input-field {
+  width: 100%;
+  margin-top: 7px;
+}
+.purchase-status-filter {
+  display: grid;
+  gap: 7px;
+}
+.purchase-filter-panel .search-input-field,
+.purchase-filter-panel .plain-input-field {
+  width: 100%;
+}
+.purchase-status-filter .app-select {
+  margin-top: 0;
+}
+@media (max-width: 720px) {
+  .modal.purchase-detail-modal {
+    width: 100%;
+    max-height: 90dvh;
+    padding: 14px 12px calc(20px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .app-shell.mobile-route .purchase-lines {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .app-shell.mobile-route .purchase-line {
+    grid-template-columns:
+      minmax(0, 1.3fr) 40px minmax(54px, 1fr) minmax(62px, 1.1fr)
+      28px;
+    gap: 4px;
+    min-width: 0;
+    padding: 8px 6px;
+  }
+
+  .app-shell.mobile-route .purchase-line-header {
+    font-size: 9px;
+    letter-spacing: 0;
+  }
+
+  .app-shell.mobile-route .purchase-lines.quantity-only .purchase-line {
+    grid-template-columns: minmax(0, 1fr) 54px 28px;
+    min-width: 0;
+  }
+
+  .app-shell.mobile-route .purchase-product-name {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .app-shell.mobile-route .purchase-line .field {
+    padding-inline: 3px;
+    font-size: 12px;
+  }
+
+  .modal.purchase-detail-modal .purchase-detail-table-wrap {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto !important;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+  }
+
+  .modal.purchase-detail-modal .purchase-detail-table {
+    width: 100%;
+    max-width: none;
+    min-width: 640px !important;
+    table-layout: fixed !important;
+  }
+
+  .modal.purchase-detail-modal .purchase-detail-table th,
+  .modal.purchase-detail-modal .purchase-detail-table td {
+    min-width: 0;
+    padding: 7px 5px;
+    font-size: 11px;
+  }
+
+  .modal.purchase-detail-modal .purchase-detail-table.has-cost th:first-child,
+  .modal.purchase-detail-modal .purchase-detail-table.has-cost td:first-child {
+    width: 28%;
+  }
+
+  .modal.purchase-detail-modal .purchase-detail-table.has-cost th:nth-child(2),
+  .modal.purchase-detail-modal .purchase-detail-table.has-cost td:nth-child(2) {
+    width: 18%;
+  }
+
+  .modal.purchase-detail-modal .purchase-detail-table.has-cost th:nth-child(3),
+  .modal.purchase-detail-modal .purchase-detail-table.has-cost td:nth-child(3) {
+    width: 24%;
+  }
+
+  .modal.purchase-detail-modal .purchase-detail-table.has-cost th:nth-child(4),
+  .modal.purchase-detail-modal .purchase-detail-table.has-cost td:nth-child(4) {
+    width: 30%;
+  }
+
+  .modal.purchase-detail-modal
+    .purchase-detail-table.without-cost
+    th:first-child,
+  .modal.purchase-detail-modal
+    .purchase-detail-table.without-cost
+    td:first-child {
+    width: 68%;
+  }
+
+  .modal.purchase-detail-modal
+    .purchase-detail-table.without-cost
+    th:nth-child(2),
+  .modal.purchase-detail-modal
+    .purchase-detail-table.without-cost
+    td:nth-child(2) {
+    width: 32%;
+  }
+}
+
+@media (max-width: 360px) {
+  .modal.purchase-detail-modal .purchase-detail-table th,
+  .modal.purchase-detail-modal .purchase-detail-table td {
+    padding-inline: 4px;
+    font-size: 10px;
+  }
+
+  .modal.purchase-detail-modal .purchase-detail-table.has-cost th:first-child,
+  .modal.purchase-detail-modal .purchase-detail-table.has-cost td:first-child {
+    width: 26%;
+  }
+
+  .modal.purchase-detail-modal .purchase-detail-table.has-cost th:nth-child(2),
+  .modal.purchase-detail-modal .purchase-detail-table.has-cost td:nth-child(2) {
+    width: 18%;
+  }
+
+  .modal.purchase-detail-modal .purchase-detail-table.has-cost th:nth-child(3),
+  .modal.purchase-detail-modal .purchase-detail-table.has-cost td:nth-child(3) {
+    width: 24%;
+  }
+
+  .modal.purchase-detail-modal .purchase-detail-table.has-cost th:nth-child(4),
+  .modal.purchase-detail-modal .purchase-detail-table.has-cost td:nth-child(4) {
+    width: 32%;
+  }
+}

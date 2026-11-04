@@ -1,0 +1,76 @@
+@media (max-width: 720px) {
+  .app-shell.mobile-route .mobile-unified-card {
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-mobile-card);
+    background: var(--surface);
+    transition:
+      border-color 140ms ease,
+      background-color 140ms ease,
+      box-shadow 140ms ease,
+      transform 140ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .app-shell.mobile-route .mobile-unified-card--interactive {
+    cursor: pointer;
+  }
+
+  @media (hover: hover) {
+    .app-shell.mobile-route .mobile-unified-card--interactive:hover {
+      border-color: var(--primary);
+      background: var(--primary-subtle);
+      box-shadow: 0 0 0 1px var(--primary-subtle);
+    }
+  }
+
+  .app-shell.mobile-route .mobile-unified-card--interactive:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  .app-shell.mobile-route .mobile-unified-card--interactive:active {
+    border-color: var(--primary);
+    background: var(--primary-subtle);
+    box-shadow: 0 0 0 2px var(--primary-subtle);
+    transform: scale(0.995);
+  }
+
+  .app-shell.mobile-route .mobile-unified-card--selected:not(.mobile-unified-card--cancelled) {
+    border-color: var(--primary);
+    background: var(--primary-subtle);
+    box-shadow: 0 0 0 1px var(--primary-subtle);
+  }
+
+  .app-shell.mobile-route .mobile-unified-card--cancelled {
+    border: 2px solid var(--danger);
+    background: var(--danger-subtle);
+  }
+
+  .app-shell.mobile-route
+    .mobile-unified-card--selected.mobile-unified-card--cancelled {
+    border-color: var(--danger);
+    background: var(--danger-subtle);
+    box-shadow: 0 0 0 1px var(--danger-subtle);
+  }
+
+  @media (hover: hover) {
+    .app-shell.mobile-route
+      .mobile-unified-card--interactive.mobile-unified-card--cancelled:hover {
+      border-color: var(--danger);
+      background: var(--danger-subtle);
+      box-shadow: 0 0 0 1px var(--danger-subtle);
+    }
+  }
+
+  .app-shell.mobile-route
+    .mobile-unified-card--interactive.mobile-unified-card--cancelled:focus-visible {
+    outline-color: var(--danger);
+  }
+
+  .app-shell.mobile-route
+    .mobile-unified-card--interactive.mobile-unified-card--cancelled:active {
+    border-color: var(--danger);
+    background: var(--danger-subtle);
+    box-shadow: 0 0 0 2px var(--danger-subtle);
+  }
+}

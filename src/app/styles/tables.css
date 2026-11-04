@@ -1,0 +1,247 @@
+/* Keep specialized controls on the shared button variants while preserving
+   their established compact layouts. */
+.app-button.app-button--ghost.table-sort {
+  display: inline-flex;
+  width: max-content;
+  min-width: 0;
+  max-width: none;
+  min-height: 0;
+  max-height: none;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  white-space: nowrap;
+  aspect-ratio: auto;
+}
+.app-button.app-button--ghost.table-sort > .sort-icon {
+  display: block;
+  width: 14px;
+  min-width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+}
+.app-table-toolbar-tools .app-button--default.column-menu-trigger {
+  width: max-content;
+  min-width: 80px;
+  max-width: none;
+  min-height: 36px;
+  padding: 0 14px;
+  gap: 8px;
+  white-space: nowrap;
+  aspect-ratio: auto;
+}
+.app-button--ghost.table-sort:hover:not(:disabled) {
+  background: var(--primary-subtle);
+  color: var(--primary);
+}
+.app-button--default.orders-filter-trigger {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+}
+.app-button--default.orders-filter-trigger:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: var(--primary-subtle);
+  color: var(--primary);
+}
+.app-button--ghost.orders-product-option,
+.app-button--ghost.purchase-search-option {
+  min-height: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+}
+.app-button--ghost.orders-product-option:hover:not(:disabled),
+.app-button--ghost.orders-product-option.selected,
+.app-button--ghost.purchase-search-option:hover:not(:disabled),
+.app-button--ghost.purchase-search-option.active {
+  background: var(--primary-subtle);
+  color: var(--text-primary);
+}
+.app-button--default.orders-product-chip {
+  width: max-content;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 32px;
+  flex: 0 1 auto;
+  justify-content: flex-start;
+  gap: 5px;
+  padding: 4px 7px;
+  border-color: var(--border);
+  background: var(--surface-subtle);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.app-button--default.orders-product-chip:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: var(--primary-subtle);
+  color: var(--primary);
+}
+.app-button--ghost.stock-tab {
+  min-height: 34px;
+  padding: 2px 12px;
+  border: 0;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.app-button--ghost.stock-tab:hover:not(:disabled) {
+  background: var(--primary-subtle);
+  color: var(--primary);
+}
+.app-button--ghost.stock-tab.active {
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+}
+.app-button--ghost.pos-order-tab {
+  min-height: 0;
+  background: transparent;
+  color: inherit;
+}
+.app-button--ghost.pos-order-tab:hover:not(:disabled) {
+  background: transparent;
+  color: inherit;
+}
+.app-button--ghost.pos-order-new {
+  color: var(--primary);
+}
+.app-button--ghost.pos-order-tab-close:hover:not(:disabled) {
+  background: var(--primary-hover);
+  color: var(--surface);
+}
+.app-button--ghost.filter-reset {
+  background: transparent;
+  color: var(--primary);
+  font-weight: var(--weight-regular);
+}
+.app-button--ghost.filter-reset:hover:not(:disabled) {
+  background: var(--primary-subtle);
+  color: var(--primary);
+}
+@media (max-width: 720px) {
+  .pos-shell .app-button--ghost.pos-order-tab {
+    min-height: 40px;
+    padding-inline: 24px;
+    font-size: 12px;
+  }
+}
+.app-table-shell {
+  width: 100%;
+  min-width: 0;
+}
+.app-table-toolbar {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 8px;
+}
+.app-table-toolbar-start,
+.app-table-toolbar-tools {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px 12px;
+}
+.app-table-toolbar-tools {
+  margin-left: auto;
+}
+.mobile-table-toolbar-metrics {
+  display: none;
+}
+.app-table-title {
+  color: var(--text-primary);
+  font-size: var(--font-size-md);
+  font-weight: var(--weight-medium);
+}
+.app-table-summary {
+  margin-top: 8px;
+}
+.app-table--striped tbody > tr:nth-child(odd) > td {
+  background-color: transparent;
+}
+.app-table--striped tbody > tr:nth-child(even) > td {
+  background-color: color-mix(in srgb, var(--primary-subtle) 45%, transparent);
+}
+.app-table--striped tbody > tr[data-row-tone="odd"] > td {
+  background-color: transparent;
+}
+.app-table--striped tbody > tr[data-row-tone="even"] > td {
+  background-color: color-mix(in srgb, var(--primary-subtle) 45%, transparent);
+}
+.app-table--striped tbody > tr:hover > td {
+  background-color: var(--primary-subtle);
+}
+.app-table-row--clickable:hover > td,
+.app-table-row--clickable:focus-visible > td {
+  background-color: var(--primary-subtle);
+}
+.app-table--striped tbody > .app-table-empty-row > td {
+  background: transparent;
+  padding: 35px 12px;
+  white-space: normal;
+}
+@media (max-width: 720px) {
+  .app-table-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .app-table-toolbar-tools {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .app-shell.mobile-route .main .mobile-table-toolbar-metrics {
+    display: grid;
+    gap: 8px;
+    margin: 0 0 10px;
+  }
+
+  .app-shell.mobile-route
+    .main
+    .mobile-record-list
+    .mobile-table-toolbar-metrics {
+    margin-bottom: 0;
+  }
+
+  .app-shell.mobile-route
+    .main
+    .mobile-table-toolbar-metrics
+    .dashboard-metric {
+    min-width: 0;
+    gap: 5px;
+    padding: 12px;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+
+  .app-shell.mobile-route .main .app-table-toolbar {
+    padding: 10px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-mobile-card);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+  }
+
+  .app-shell.mobile-route .main .app-table-toolbar .table-tools-summary {
+    display: none;
+  }
+
+  .app-shell.mobile-route .main .mobile-product-list .app-table-toolbar {
+    display: none;
+  }
+}

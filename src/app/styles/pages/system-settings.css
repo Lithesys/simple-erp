@@ -1,0 +1,184 @@
+.system-settings-page {
+  max-width: 880px;
+}
+
+.system-settings-card {
+  padding: 18px;
+}
+
+.desktop-settings-stack {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.desktop-settings-card {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.desktop-settings-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.desktop-settings-heading h2,
+.desktop-settings-heading p {
+  margin: 0;
+}
+
+.desktop-settings-heading h2 {
+  font-size: var(--font-size-lg);
+  color: var(--text-primary);
+}
+
+.desktop-settings-heading p,
+.desktop-field small {
+  margin-top: 5px;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.desktop-field {
+  display: grid;
+  gap: 6px;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.desktop-field select.field {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.desktop-secret-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.desktop-field-wide {
+  grid-column: 1 / -1;
+}
+
+.desktop-settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.desktop-feedback {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.desktop-feedback-ok {
+  color: var(--success, #218348);
+}
+
+.desktop-feedback-error {
+  color: var(--danger, #b42318);
+}
+
+.desktop-migration-preview {
+  max-height: 220px;
+  overflow: auto;
+  padding: 12px 14px;
+  border: 1px solid var(--border-color, #dce2ea);
+  border-radius: 10px;
+  background: var(--surface-subtle, #f8fafc);
+  font-size: 0.875rem;
+}
+
+.desktop-migration-preview ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  color: var(--text-secondary, #586274);
+  overflow-wrap: anywhere;
+}
+
+.desktop-recovery-page {
+  display: grid;
+  align-items: center;
+}
+
+.desktop-recovery-page .desktop-settings-stack {
+  width: min(820px, calc(100vw - 32px));
+  margin: 0 auto;
+}
+
+.desktop-recovery-back {
+  justify-self: start;
+}
+
+.system-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  cursor: pointer;
+}
+
+.system-setting-copy {
+  flex: 1;
+  display: grid;
+  gap: 5px;
+  max-width: 540px;
+}
+
+.system-setting-copy strong {
+  color: var(--text-primary);
+}
+
+.system-setting-copy > span,
+.system-settings-note {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.system-setting-copy small {
+  color: var(--text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.system-setting-checkbox {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--primary);
+}
+
+.system-settings-note {
+  margin: 16px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 640px) {
+  .system-settings-card {
+    padding: 14px;
+  }
+
+  .desktop-settings-card {
+    padding: 14px;
+  }
+
+  .desktop-secret-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .desktop-field-wide {
+    grid-column: auto;
+  }
+}
