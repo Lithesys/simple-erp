@@ -4,7 +4,7 @@
 - [Architecture](./architecture/overview.md): cấu trúc ứng dụng, quyền truy cập và luồng dữ liệu.
 - [Permissions](./permissions.md): danh mục quyền và yêu cầu quyền riêng cho giá vốn, nhập hàng.
 - [Client data cache](./data-caching.md): phạm vi cache query, quy tắc query key và invalidation sau mutation.
-- [System settings](./system-settings.md): quy tắc cho tùy chọn hệ thống chỉ lưu trong localStorage.
+- [System settings](./system-settings.md): tên cửa hàng dùng chung trong database và tùy chọn in cục bộ.
 - [Analysis pages](./analysis-guidelines.md): công thức KPI, tổng hợp database, tải widget độc lập, cache lịch sử và phân trang server.
 - [Kiểm thử bằng Chrome](./testing.md): tài khoản local cho cả admin và nhân viên, luồng kiểm tra chỉ đọc, cùng cổng xác nhận trước khi push `main`.
 - [Skill kiểm thử hệ thống](../.agents/skills/erp-system-testing/SKILL.md): ma trận tổng quan theo vai trò, giao diện và CRUD trên môi trường cô lập.

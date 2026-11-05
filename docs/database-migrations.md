@@ -18,6 +18,10 @@ Database changes live in timestamped files under `supabase/migrations/`. Each mi
 3. Confirm that only this compensating migration is pending, apply it through the migration-aware workflow, and verify the schema and migration history afterward. A rollback script applied outside migration history can leave future deploys inconsistent.
 4. Revert application code separately and verify the rolled-back app no longer expects the removed schema.
 
+## Shared application settings
+
+The migration `20261105041712_shared_app_settings.sql` creates `public.app_settings`, a generic JSONB key/value table, and seeds the public `store_name` setting with the default `ERP`. RLS allows public reads only for rows marked public and restricts all writes and private reads to `accounts.manage`. Explicit Data API grants are included. The rollback drops the table and all values added to it; export settings before using the rollback after deployment.
+
 ## Debt feature rollback
 
 The prepared script is [20261010020929_plan_10_09_01_debts.sql](../supabase/rollbacks/20261010020929_plan_10_09_01_debts.sql). It removes the debt RPC/table, strips only the `debts.*` permissions, and restores the pre-feature `customers_read` policy. Dropping the table deletes all debt rows, so export them first if rollback occurs after users have created records.

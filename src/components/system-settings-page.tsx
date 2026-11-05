@@ -14,18 +14,20 @@ import {
 
 export function SystemSettingsPage() {
   const { access } = useUserAccess();
-  const { storeName, setStoreName, isLoaded } = useStoreBrand();
+  const { storeName, setStoreName, isLoaded, storeNameSaveState } =
+    useStoreBrand();
   const [autoPrint, setAutoPrint, ready] = useAutoPrintSetting(
     access?.user.id ?? null,
   );
-  const [silentPrint, setSilentPrint, silentPrintReady] = useSilentPrintSetting();
+  const [silentPrint, setSilentPrint, silentPrintReady] =
+    useSilentPrintSetting();
 
   return (
     <section className="system-settings-page">
       <header className="page-heading">
         <div>
           <h1>Cài đặt</h1>
-          <p>Tùy chỉnh hoạt động của ứng dụng trên thiết bị này.</p>
+          <p>Quản lý tên cửa hàng dùng chung và các tùy chọn trên thiết bị.</p>
         </div>
       </header>
       <div className="card system-settings-card">
@@ -33,22 +35,40 @@ export function SystemSettingsPage() {
           <span className="system-setting-copy">
             <strong>Tên cửa hàng</strong>
             <span>
-              Hiển thị trên tiêu đề ứng dụng, thanh điều hướng và hóa đơn. Tối đa 20 ký tự.
+              Hiển thị trên tiêu đề ứng dụng, thanh điều hướng và hóa đơn. Tối
+              đa 20 ký tự.
             </span>
             <AppInput
               className="field"
               type="text"
               value={storeName}
               maxLength={40}
-              disabled={!isLoaded || access?.role !== "Admin"}
+              disabled={!isLoaded || !access?.can("accounts.manage")}
               aria-label="Tên cửa hàng"
               onChange={(event) => setStoreName(event.target.value)}
             />
             <small>{countStoreNameCharacters(storeName)}/20 ký tự</small>
+            <small
+              aria-live="polite"
+              className={
+                storeNameSaveState === "error"
+                  ? "system-settings-save-status-error"
+                  : "system-settings-save-status"
+              }
+            >
+              {!isLoaded
+                ? ""
+                : storeNameSaveState === "saving"
+                  ? "Đang lưu..."
+                  : storeNameSaveState === "error"
+                    ? "Không thể lưu vào cơ sở dữ liệu chung. Kiểm tra kết nối hoặc quyền quản trị."
+                    : "Đã lưu."}
+            </small>
           </span>
         </label>
         <p className="system-settings-note">
-          Tên cửa hàng được lưu trong trình duyệt này, không lưu vào cơ sở dữ liệu.
+          Tên cửa hàng được lưu trong cơ sở dữ liệu chung và hiển thị trên các
+          thiết bị cùng kết nối.
         </p>
       </div>
       <div className="card system-settings-card">
@@ -73,7 +93,8 @@ export function SystemSettingsPage() {
           <span className="system-setting-copy">
             <strong>In thẳng, không mở hộp thoại</strong>
             <span>
-              Khi bật, phiếu được gửi trực tiếp đến máy in mặc định. Khi tắt, ứng dụng mở hộp thoại in để bạn chọn máy in và tuỳ chỉnh.
+              Khi bật, phiếu được gửi trực tiếp đến máy in mặc định. Khi tắt,
+              ứng dụng mở hộp thoại in để bạn chọn máy in và tuỳ chỉnh.
             </span>
           </span>
           <AppInput
@@ -86,7 +107,10 @@ export function SystemSettingsPage() {
           />
         </label>
         <p className="system-settings-note">
-          Tùy chọn in được lưu trên thiết bị này và áp dụng từ lần in tiếp theo, không cần khởi động lại ứng dụng. Cần cài sẵn driver phù hợp với máy in và đặt máy in đó làm mặc định. Chế độ in thẳng dùng khổ giấy mặc định trong driver.
+          Tùy chọn in được lưu trên thiết bị này và áp dụng từ lần in tiếp theo,
+          không cần khởi động lại ứng dụng. Cần cài sẵn driver phù hợp với máy
+          in và đặt máy in đó làm mặc định. Chế độ in thẳng dùng khổ giấy mặc
+          định trong driver.
         </p>
       </div>
       <DesktopDatabaseSettings canManage={access?.role === "Admin"} />

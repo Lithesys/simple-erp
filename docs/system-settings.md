@@ -1,10 +1,18 @@
 # Cài đặt hệ thống
 
-Các tùy chọn ở **Hệ thống → Cài đặt** chỉ lưu trong `localStorage`, theo tài khoản đăng nhập của trình duyệt hiện tại. Không tạo cột, bảng, RPC hoặc API để đồng bộ các tùy chọn này với database.
+## Tên cửa hàng dùng chung
 
-Key dùng tiền tố `erp-preference:system:v1:` và có thêm ID tài khoản để tách cài đặt của từng người dùng trên cùng trình duyệt. Tùy chọn **In tự động** mặc định bật và quyết định việc mở hộp thoại in sau khi sửa hóa đơn thành công. Nếu storage bị chặn, lỗi hoặc đầy, trang vẫn tiếp tục hoạt động với giá trị mặc định.
+Tên cửa hàng được lưu trong `public.app_settings` ở khóa `store_name`. Bảng dùng cặp `setting_key`/`value` với kiểu JSONB để có thể thêm các thuộc tính khác mà không cần thêm cột cho từng tùy chọn. `is_public` cho phép chủ động công khai một giá trị; mặc định các setting mới là riêng tư. Các cột `is_default`, `updated_at` và `updated_by` hỗ trợ giá trị mặc định và theo dõi lần cập nhật.
 
-Khi thêm tùy chọn mới, khai báo key và giá trị mặc định trong `src/lib/system-settings.ts`, đọc và ghi bằng hook cùng module này, rồi kiểm tra khởi tạo sau hydration để tránh ghi đè giá trị đã lưu.
+Mọi khách có thể đọc setting được đánh dấu công khai; người dùng đã đăng nhập cũng đọc được các setting công khai. Quyền `accounts.manage` mới được đọc setting riêng tư hoặc ghi/xóa setting. Row `store_name` được công khai vì tên xuất hiện cả ở trang đăng nhập. RLS và GRANT được khai báo cùng migration.
+
+Migration tạo tên mặc định `ERP`. Khi tài khoản Admin mở ứng dụng lần đầu sau nâng cấp, tên cũ đang lưu trong trình duyệt được chuyển một lần vào database nếu giá trị database vẫn là mặc định. Sau khi lưu thành công, key cũ trong `localStorage` được xóa.
+
+## Tùy chọn trên thiết bị
+
+Tùy chọn in vẫn lưu trong `localStorage` trên thiết bị hiện tại. Key dùng tiền tố `erp-preference:system:v1:`; tự in được tách theo ID tài khoản. Tùy chọn **In tự động** mặc định bật và quyết định việc mở hộp thoại in sau khi sửa hóa đơn thành công. Nếu storage bị chặn, lỗi hoặc đầy, trang vẫn tiếp tục hoạt động với giá trị mặc định.
+
+Khi thêm tùy chọn cục bộ mới, khai báo key và giá trị mặc định trong `src/lib/system-settings.ts`, đọc và ghi bằng hook cùng module này, rồi kiểm tra khởi tạo sau hydration để tránh ghi đè giá trị đã lưu. Setting cần dùng chung giữa thiết bị phải được thêm như một khóa trong `app_settings` với RLS, GRANT và giao diện tương ứng.
 
 ### Cơ sở dữ liệu Desktop
 
