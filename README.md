@@ -1,6 +1,12 @@
-# ERP
+# Simple ERP — Open-source POS & Inventory Management
 
-Ứng dụng quản lý bán hàng và kho, có bản web và bản Windows desktop. Bản desktop hỗ trợ cơ sở dữ liệu cục bộ để làm việc ngoại tuyến hoặc kết nối PostgreSQL/Supabase.
+Simple ERP is an open-source ERP and point-of-sale (POS) system for small retail businesses. Manage products, inventory and stock, sales, orders, customers, and customer debt through the web app or Windows desktop app. Desktop mode supports offline use with a local database or PostgreSQL/Supabase.
+
+Ứng dụng ERP quản lý bán hàng, kho, sản phẩm, đơn hàng, khách hàng và công nợ, có bản web và bản Windows desktop. Bản desktop hỗ trợ cơ sở dữ liệu cục bộ để làm việc ngoại tuyến hoặc kết nối PostgreSQL/Supabase.
+
+## Giao diện
+
+![Giao diện đăng nhập ERP, POS và phần mềm quản lý bán hàng, kho](public/screenshots/erp-login.png)
 
 ## Hướng dẫn sử dụng
 
