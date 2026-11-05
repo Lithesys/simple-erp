@@ -20,7 +20,7 @@ Database changes live in timestamped files under `supabase/migrations/`. Each mi
 
 ## Shared application settings
 
-The migration `20261105041712_shared_app_settings.sql` creates `public.app_settings`, a generic JSONB key/value table, and seeds the public `store_name` setting with the default `ERP`. RLS allows public reads only for rows marked public and restricts all writes and private reads to `accounts.manage`. Explicit Data API grants are included. The rollback drops the table and all values added to it; export settings before using the rollback after deployment.
+The migration `20261105044617_shared_app_settings.sql` creates `public.app_settings`, a generic JSONB key/value table, and seeds the public `store_name` setting with the default `ERP`. RLS allows public reads only for rows marked public and restricts all writes and private reads to `accounts.manage`. Explicit Data API grants are included. The rollback drops the table and all values added to it; export settings before using the rollback after deployment.
 
 ## Debt feature rollback
 
