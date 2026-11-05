@@ -328,7 +328,7 @@ async function runMigrations(client, onProgress = () => {}) {
       RETURN new;
     END $$
   `);
-  await client.query("GRANT USAGE ON SCHEMA public, auth TO anon, authenticated, service_role");
+  await client.query("GRANT USAGE ON SCHEMA public, auth, extensions TO anon, authenticated, service_role");
   await client.query("GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role");
   await client.query("GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO service_role");
   await client.query("GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO service_role");
@@ -413,7 +413,7 @@ async function nextPort(first) {
   return choosePort(first);
 }
 
-async function startPostgrest({ connectionString, jwtSecret, preparedStatements = true }) {
+async function startPostgrest({ connectionString, jwtSecret, preparedStatements = true, poolSize = 5 }) {
   if (!postgrestExecutable) throw new Error("PostgREST is missing from this installation.");
   const port = await nextPort(43140);
   const args = [];
@@ -429,7 +429,7 @@ async function startPostgrest({ connectionString, jwtSecret, preparedStatements 
       PGRST_SERVER_HOST: "127.0.0.1",
       PGRST_SERVER_PORT: String(port),
       PGRST_LOG_LEVEL: "error",
-      PGRST_DB_POOL: "5",
+      PGRST_DB_POOL: String(poolSize),
     },
     windowsHide: true,
     stdio: ["ignore", "pipe", "pipe"],
@@ -526,12 +526,14 @@ async function startLocalBackend(config) {
       await runMigrations(database, (progress) => send("migration-progress", progress));
     }
     const pgPort = await nextPort(43150);
-    socketServer = new PGLiteSocketServer({ db: database, host: "127.0.0.1", port: pgPort, maxConnections: 5 });
+    // Keep spare sockets for engine-side auth/session work alongside PostgREST's pool.
+    socketServer = new PGLiteSocketServer({ db: database, host: "127.0.0.1", port: pgPort, maxConnections: 16 });
     await socketServer.start();
     const postgrestResult = await startPostgrest({
       connectionString: `postgres://authenticator:desktop-local@127.0.0.1:${pgPort}/postgres?sslmode=disable`,
       jwtSecret,
       preparedStatements: false,
+      poolSize: 1,
     });
     postgrestProcess = postgrestResult.process;
     const tokens = await issueServiceTokens(jwtSecret);

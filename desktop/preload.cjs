@@ -12,7 +12,7 @@ contextBridge.exposeInMainWorld("erpDesktop", {
   saveDatabase: (config, initialize, accessToken, recovery) =>
     ipcRenderer.invoke("desktop:save-database", config, initialize, accessToken, recovery),
   checkForUpdates: () => ipcRenderer.invoke("desktop:check-updates"),
-  printPage: () => ipcRenderer.invoke("desktop:print-page"),
+  printPage: (silent) => ipcRenderer.invoke("desktop:print-page", silent),
   onUpdateState: (listener) => {
     listeners.add(listener);
     return () => listeners.delete(listener);

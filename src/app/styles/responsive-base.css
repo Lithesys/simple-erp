@@ -135,7 +135,7 @@
     display: block;
   }
   @page {
-    size: 80mm auto;
+    size: auto;
     margin: 4mm;
   }
 }

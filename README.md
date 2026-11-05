@@ -14,6 +14,14 @@ Simple ERP is an open-source ERP and point-of-sale (POS) system for small retail
 
 ![Màn hình POS bán hàng của Simple ERP với hóa đơn trống](https://raw.githubusercontent.com/Lithesys/simple-erp/bb21616b554797fbb007f03b7616121206960b90/public/screenshots/erp-pos.jpg)
 
+### Đơn hàng
+
+![ERP order management screenshot with customer identifiers and monetary values concealed](public/screenshots/erp-orders.png)
+
+### Hàng hóa
+
+![ERP product and inventory management screenshot with pricing and inventory value concealed](public/screenshots/erp-products.png)
+
 ## Hướng dẫn sử dụng
 
 Không cần cài công cụ lập trình. Xem [hướng dẫn cài bản Windows](docs/install-vi.md) để tải và cài ERP từ GitHub Releases.

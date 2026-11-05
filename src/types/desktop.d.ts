@@ -12,7 +12,7 @@ declare global {
         recovery: boolean,
       ): Promise<{ ok: boolean }>;
       checkForUpdates(): Promise<unknown>;
-      printPage(): Promise<{ ok: boolean; message?: string }>;
+      printPage(silent?: boolean): Promise<{ ok: boolean; message?: string }>;
       onUpdateState(listener: (state: DesktopUpdateState) => void): () => void;
     };
   }

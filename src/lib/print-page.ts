@@ -1,4 +1,5 @@
 import { toast } from "react-toastify";
+import { getSilentPrintSetting } from "@/lib/system-settings";
 
 export function printPage() {
   if (typeof window === "undefined") return;
@@ -7,7 +8,7 @@ export function printPage() {
     return;
   }
 
-  void window.erpDesktop.printPage().then((result) => {
+  void window.erpDesktop.printPage(getSilentPrintSetting()).then((result) => {
     if (!result.ok) throw new Error(result.message || "Printing failed.");
   }).catch((error: unknown) => {
     console.error("Desktop printing failed.", error);

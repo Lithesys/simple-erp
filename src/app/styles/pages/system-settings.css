@@ -6,6 +6,12 @@
   padding: 18px;
 }
 
+.system-settings-card > h2 {
+  margin: 0 0 16px;
+  color: var(--text-primary);
+  font-size: var(--font-size-lg);
+}
+
 .desktop-settings-stack {
   display: grid;
   gap: 16px;

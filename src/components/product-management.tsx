@@ -594,9 +594,16 @@ export function ProductManagement({
       setLists((listsResult ?? []) as PriceList[]);
       setComponentOptions((componentsResult ?? []) as Product[]);
     } catch (caught) {
-      setError(
-        caught instanceof Error ? caught.message : "Không tải được hàng hóa.",
-      );
+      const message =
+        caught instanceof Error
+          ? caught.message
+          : caught &&
+              typeof caught === "object" &&
+              "message" in caught &&
+              typeof caught.message === "string"
+            ? caught.message
+            : "Không tải được hàng hóa.";
+      setError(message);
     }
     finishInitialLoad();
   }, [canViewCost, finishInitialLoad, queryClient, setSort, supabase]);

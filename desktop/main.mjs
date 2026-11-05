@@ -828,10 +828,15 @@ function registerIpc() {
     }
   });
   ipcMain.handle("desktop:check-updates", (event) => { authorizeFrame(event); return checkForUpdates(); });
-  ipcMain.handle("desktop:print-page", (event) => {
+  ipcMain.handle("desktop:print-page", (event, requestedSilent) => {
     authorizeFrame(event);
+    const silent = typeof requestedSilent === "boolean" ? requestedSilent : app.isPackaged;
     return new Promise((resolve) => {
-      event.sender.print({ silent: true, printBackground: true }, (success, failureReason) => {
+      event.sender.print({
+        silent,
+        printBackground: true,
+        ...(silent ? { usePrinterDefaultPageSize: true } : {}),
+      }, (success, failureReason) => {
         resolve(success
           ? { ok: true }
           : { ok: false, message: failureReason || "Could not print to the default printer." });
@@ -888,6 +893,7 @@ async function shutdown() {
 async function startApp() {
   if (!(await safeStorage.isAsyncEncryptionAvailable())) throw new Error("Windows secure storage is unavailable. Desktop credentials cannot be saved safely.");
   connection = await loadConfig();
+  if (!app.isPackaged) console.log(`[desktop] Starting database mode: ${connection.mode}`);
   if (!connection.jwtSecret) {
     connection.jwtSecret = randomBytes(32).toString("base64url");
     await saveConfig(connection);
@@ -910,6 +916,7 @@ async function startApp() {
     } else if (connection.mode === "supabase" && result.status === "ready") {
       backend = { ...backend, mode: "supabase", restUrl: null, dbUrl: null, status: "ready" };
     }
+    if (!app.isPackaged) console.log(`[desktop] Database startup result: ${result.status}`);
   } catch (error) {
     backend = { mode: connection.mode, restUrl: null, dbUrl: null, anonJwt: null, serviceJwt: null, status: "error" };
     lastError = sanitizeError(error, connection.connectionString);
@@ -975,6 +982,7 @@ else {
       registerUpdater();
     } catch (error) {
       lastError = sanitizeError(error, connection?.connectionString);
+      if (!app.isPackaged) console.error(`[desktop] Startup failed: ${lastError}`);
       await dialog.showMessageBox({ type: "error", title: "ERP", message: "The desktop app could not start.", detail: lastError });
       quitting = true;
       await shutdown();
