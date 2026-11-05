@@ -6,7 +6,7 @@ Simple ERP is an open-source ERP and point-of-sale (POS) system for small retail
 
 ## Giao diện
 
-![Giao diện đăng nhập ERP, POS và phần mềm quản lý bán hàng, kho](public/screenshots/erp-login.png)
+![Giao diện đăng nhập ERP, POS và phần mềm quản lý bán hàng, kho](https://raw.githubusercontent.com/Lithesys/simple-erp/71352af431adab81d81634eb9d014dcb4d09350d/public/screenshots/erp-login.png)
 
 ## Hướng dẫn sử dụng
 
