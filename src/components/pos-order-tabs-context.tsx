@@ -16,6 +16,7 @@ import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 
 export type PosOrderValues = {
   listId: string;
+  customerId: string;
   customer: string;
   customerPhone: string;
   customerAddress: string;
@@ -62,6 +63,7 @@ function createInitialOrderState(): OrderState {
     id: "draft-1",
     name: "Hóa đơn 1",
     listId: "",
+    customerId: "",
     customer: "",
     customerPhone: "",
     customerAddress: "",
@@ -114,6 +116,7 @@ function parseOrder(value: unknown): PosOrderDraft | null {
     id: value.id,
     name: value.name,
     listId: typeof value.listId === "string" ? value.listId : "",
+    customerId: typeof value.customerId === "string" ? value.customerId : "",
     customer: typeof value.customer === "string" ? value.customer : "",
     customerPhone:
       typeof value.customerPhone === "string" ? value.customerPhone : "",

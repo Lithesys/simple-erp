@@ -64,6 +64,11 @@ export const APP_NAVIGATION: NavGroup[] = [
         label: "Hàng hóa",
         page: "productAnalysis",
       },
+      {
+        href: "/analysis/sales",
+        label: "Bán hàng",
+        page: "salesAnalysis",
+      },
     ],
   },
   {

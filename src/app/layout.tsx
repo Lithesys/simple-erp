@@ -7,6 +7,7 @@ import "./styles/pages/orders.css";
 import "./styles/pages/activity-history.css";
 import "./styles/pages/dashboard.css";
 import "./styles/pages/product-analysis.css";
+import "./styles/pages/sales-analysis.css";
 import "./styles/pages/pos.css";
 import "./styles/responsive-base.css";
 import "./styles/shared-interactions.css";

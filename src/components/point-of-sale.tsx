@@ -3,6 +3,7 @@
 import { AppButton } from "@/components/app-button";
 import { ModalLayer } from "@/components/modal-layer";
 import { AppTextarea } from "@/components/app-textarea";
+import { CustomerEditorDialog } from "@/components/customer-editor-dialog";
 import { mergeClassNames } from "@/lib/class-names";
 import { ReceiptPrint } from "@/components/receipt-print";
 
@@ -13,7 +14,10 @@ import { createClient } from "@/lib/data/client";
 import { formatQuantity, formatVnd } from "@/lib/format";
 import { DECIMAL_SCALE } from "@/lib/constants";
 import { calculateTotals } from "@/lib/pricing";
-import { CustomerPicker } from "@/components/customer-picker";
+import {
+  CustomerPicker,
+  type CustomerContact,
+} from "@/components/customer-picker";
 import { SearchInputField } from "@/components/search-input-field";
 import { NumberInputField } from "@/components/number-input-field";
 import { PosCartLine } from "@/components/pos-cart-line";
@@ -36,7 +40,10 @@ import {
   readPosSearchCache,
   searchProductsLocally,
   syncPosSearchData,
+  upsertPosSearchCustomer,
 } from "@/lib/pos-search-cache";
+import { customerValues, type Customer } from "@/lib/customers";
+import { changedFieldPatch } from "@/lib/partial-update";
 
 type Receipt = {
   order_no: string;
@@ -53,6 +60,7 @@ type Receipt = {
 };
 type SaleFormValues = {
   listId: string;
+  customerId: string;
   customer: string;
   customerPhone: string;
   customerAddress: string;
@@ -61,7 +69,15 @@ type SaleFormValues = {
   cart: CartLine[];
 };
 
-export function PointOfSale({ canEditPrice }: { canEditPrice: boolean }) {
+export function PointOfSale({
+  canEditPrice,
+  canCreateCustomer,
+  canUpdateCustomer,
+}: {
+  canEditPrice: boolean;
+  canCreateCustomer: boolean;
+  canUpdateCustomer: boolean;
+}) {
   const pathname = usePathname();
   const isMobileRoute = pathname.startsWith("/mobile/");
   const {
@@ -81,6 +97,7 @@ export function PointOfSale({ canEditPrice }: { canEditPrice: boolean }) {
   const saleForm = useForm<SaleFormValues>({
     defaultValues: {
       listId: activeOrder.listId,
+      customerId: activeOrder.customerId,
       customer: activeOrder.customer,
       customerPhone: activeOrder.customerPhone,
       customerAddress: activeOrder.customerAddress,
@@ -97,6 +114,7 @@ export function PointOfSale({ canEditPrice }: { canEditPrice: boolean }) {
     reset: resetSaleForm,
   } = saleForm;
   const listId = saleForm.watch("listId");
+  const customerId = saleForm.watch("customerId");
   const cart = saleForm.watch("cart");
   const customer = saleForm.watch("customer");
   const customerPhone = saleForm.watch("customerPhone");
@@ -107,6 +125,10 @@ export function PointOfSale({ canEditPrice }: { canEditPrice: boolean }) {
   const [notice, setNotice] = useState("");
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [draftPrint, setDraftPrint] = useState(false);
+  const [receiptCountdown, setReceiptCountdown] = useState(2);
+  const [customerDialog, setCustomerDialog] = useState<Customer | null>(null);
+  const [customerBusy, setCustomerBusy] = useState(false);
+  const [customerError, setCustomerError] = useState("");
   const [retryKey, setRetryKey] = useState<string | null>(null);
   const [discountInputVersion, setDiscountInputVersion] = useState(0);
   const productSearchRef = useRef<HTMLInputElement>(null);
@@ -123,6 +145,19 @@ export function PointOfSale({ canEditPrice }: { canEditPrice: boolean }) {
   const activeOrderRef = useRef(activeOrder);
   const lastPosSyncRef = useRef(0);
   const posSyncInFlightRef = useRef(false);
+
+  useEffect(() => {
+    if (!receipt || draftPrint) return;
+    setReceiptCountdown(2);
+    const countdown = window.setInterval(() => {
+      setReceiptCountdown((current) => Math.max(0, current - 1));
+    }, 1000);
+    const close = window.setTimeout(() => setReceipt(null), 2000);
+    return () => {
+      window.clearInterval(countdown);
+      window.clearTimeout(close);
+    };
+  }, [draftPrint, receipt]);
 
   useEffect(() => {
     activeOrderRef.current = activeOrder;
@@ -143,6 +178,7 @@ export function PointOfSale({ canEditPrice }: { canEditPrice: boolean }) {
       const order = activeOrderRef.current;
       resetSaleForm({
         listId: order.listId,
+        customerId: order.customerId,
         customer: order.customer,
         customerPhone: order.customerPhone,
         customerAddress: order.customerAddress,
@@ -159,6 +195,7 @@ export function PointOfSale({ canEditPrice }: { canEditPrice: boolean }) {
 
     updateOrder(activeOrderId, {
       listId,
+      customerId,
       customer,
       customerPhone,
       customerAddress,
@@ -170,6 +207,7 @@ export function PointOfSale({ canEditPrice }: { canEditPrice: boolean }) {
     orderTabsReady,
     activeOrderId,
     listId,
+    customerId,
     customer,
     customerPhone,
     customerAddress,
@@ -654,6 +692,7 @@ export function PointOfSale({ canEditPrice }: { canEditPrice: boolean }) {
     });
     const clearedOrder = {
       listId: values.listId,
+      customerId: "",
       customer: "",
       customerPhone: "",
       customerAddress: "",
@@ -666,7 +705,9 @@ export function PointOfSale({ canEditPrice }: { canEditPrice: boolean }) {
     setQuery("");
     setDiscountInputVersion((version) => version + 1);
     setRetryKey(null);
-    toast.success("Thanh toán thành công · " + result.order_no);
+    toast.success("Thanh toán thành công · " + result.order_no, {
+      autoClose: 2000,
+    });
     window.setTimeout(printPage, 300);
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["pos-products"] }),
@@ -715,6 +756,63 @@ export function PointOfSale({ canEditPrice }: { canEditPrice: boolean }) {
     });
     setDraftPrint(true);
     window.setTimeout(printPage, 300);
+  }
+
+  async function saveCustomer(values: Customer) {
+    if (!customerDialog || customerBusy) return;
+    setCustomerBusy(true);
+    setCustomerError("");
+    try {
+      const payload = customerValues(values);
+      let savedCustomer: Customer;
+      if (customerDialog.id) {
+        const patch = changedFieldPatch(customerDialog, payload, [
+          "name",
+          "phone",
+          "address",
+        ]);
+        if (Object.keys(patch).length) {
+          const result = await supabase
+            .from("customers")
+            .update(patch)
+            .eq("id", customerDialog.id)
+            .select("id,name,phone,address")
+            .single();
+          if (result.error) throw result.error;
+          savedCustomer = result.data as Customer;
+        } else {
+          savedCustomer = { ...customerDialog, ...payload };
+        }
+      } else {
+        const result = await supabase
+          .from("customers")
+          .insert(payload)
+          .select("id,name,phone,address")
+          .single();
+        if (result.error) throw result.error;
+        savedCustomer = result.data as Customer;
+      }
+      setCustomerDialog(null);
+      setSaleValue("customerId", savedCustomer.id);
+      setSaleValue("customer", savedCustomer.name);
+      setSaleValue("customerPhone", savedCustomer.phone);
+      setSaleValue("customerAddress", savedCustomer.address);
+      setRetryKey(null);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["customers"] }),
+        queryClient.invalidateQueries({ queryKey: ["customer-suggestions"] }),
+        upsertPosSearchCustomer(supabase, savedCustomer).catch(() => undefined),
+      ]);
+    } catch (caught) {
+      setCustomerError(
+        caught instanceof Error
+          ? caught.message
+          : (caught as { message?: string }).message ||
+              "Không lưu được khách hàng.",
+      );
+    } finally {
+      setCustomerBusy(false);
+    }
   }
 
   const submitPayment = handleSaleSubmit(pay);
@@ -886,7 +984,7 @@ export function PointOfSale({ canEditPrice }: { canEditPrice: boolean }) {
               className="pos-order-note"
               aria-label="Ghi chú đơn hàng"
               placeholder="Ghi chú đơn hàng"
-              rows={1}
+              rows={2}
               maxLength={2000}
               disabled={busy}
               value={note}
@@ -895,9 +993,6 @@ export function PointOfSale({ canEditPrice }: { canEditPrice: boolean }) {
                 setRetryKey(null);
               }}
             />
-            <span style={{ marginLeft: "auto" }}>
-              {cart.length} dòng · {formatQuantity(totalQuantity)} sản phẩm
-            </span>
           </div>
         </section>
         <form
@@ -946,24 +1041,48 @@ export function PointOfSale({ canEditPrice }: { canEditPrice: boolean }) {
             <span className="muted" style={{ fontSize: 12 }}>
               {activeOrder.name.toLocaleUpperCase("vi-VN")}
             </span>
-            <span className="badge">{cart.length} dòng</span>
+            <span className="badge">
+              {formatQuantity(totalQuantity)} sản phẩm
+            </span>
           </AppButton>
           <Controller
             control={saleFormControl}
             name="customer"
             render={({ field }) => (
               <CustomerPicker
+                key={`${activeOrderId}-${customerId || "none"}`}
                 compact
                 inputRef={customerInputRef}
                 placeholder="Tìm theo tên, sđt, địa chỉ"
                 value={{
+                  id: customerId,
                   name: field.value,
                   phone: customerPhone,
                   address: customerAddress,
                 }}
                 disabled={busy}
+                canCreateCustomer={canCreateCustomer}
+                onCreateCustomer={() => {
+                  setCustomerError("");
+                  setCustomerDialog({ id: "", name: "", phone: "", address: "" });
+                }}
+                onEditCustomer={
+                  canUpdateCustomer
+                    ? (contact: CustomerContact) => {
+                        if (!contact.id) return;
+                        setCustomerError("");
+                        setCustomerDialog({
+                          id: contact.id,
+                          name: contact.name,
+                          phone: contact.phone,
+                          address: contact.address,
+                        });
+                      }
+                    : undefined
+                }
                 onChange={(value) => {
                   field.onChange(value.name);
+                  setSaleValue("customerId", value.id || "");
                   setSaleValue("customerPhone", value.phone);
                   setSaleValue("customerAddress", value.address);
                   setRetryKey(null);
@@ -1103,7 +1222,9 @@ export function PointOfSale({ canEditPrice }: { canEditPrice: boolean }) {
 
                 onClick={() => setReceipt(null)}
               >
-                Đóng
+                {draftPrint
+                  ? "Đóng"
+                  : `Tự đóng sau ${receiptCountdown} giây`}
               </AppButton>
               <AppButton
                 variant="primary"
@@ -1116,6 +1237,15 @@ export function PointOfSale({ canEditPrice }: { canEditPrice: boolean }) {
             </div>
           </div>
         </ModalLayer>
+      )}
+      {customerDialog && (
+        <CustomerEditorDialog
+          customer={customerDialog}
+          busy={customerBusy}
+          error={customerError}
+          onClose={() => setCustomerDialog(null)}
+          onSave={saveCustomer}
+        />
       )}
     </>
   );

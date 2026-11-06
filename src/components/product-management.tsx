@@ -1139,6 +1139,7 @@ export function ProductManagement({
               }
             : { ...current, product_costs: { cost: next } },
       );
+      toast.success("Đã cập nhật giá hàng hóa.", { autoClose: 2000 });
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : "Không lưu được giá.",
@@ -2050,7 +2051,7 @@ export function ProductManagement({
           </fieldset>
           <AppButton
             variant="ghost"
-            className="filter-reset"
+            className="filter-reset filter-clear-button"
             onClick={() => updateUrl(1, size, "", "all", sort, "active")}
           >
             Xóa bộ lọc

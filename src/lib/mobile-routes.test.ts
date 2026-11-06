@@ -31,6 +31,8 @@ describe("responsive route mapping", () => {
     expect(toDesktopRoute("/mobile/analysis/products")).toBe(
       "/analysis/products",
     );
+    expect(toMobileRoute("/analysis/sales")).toBe("/mobile/analysis/sales");
+    expect(toDesktopRoute("/mobile/analysis/sales")).toBe("/analysis/sales");
     expect(getMobileHref("/not-yet-mapped")).toBe("/not-yet-mapped");
     expect(toDesktopRoute("/mobile/activity-history")).toBe(
       "/activity-history",

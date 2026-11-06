@@ -16,6 +16,7 @@ import type { Permission } from "./types";
 const expectedPageRules: Record<PageAccessKey, PermissionPolicy> = {
   dashboard: { anyOf: ["orders.read_own", "orders.read_all"] },
   productAnalysis: { anyOf: ["orders.read_own", "orders.read_all"] },
+  salesAnalysis: { anyOf: ["orders.read_own", "orders.read_all"] },
   pos: { allOf: ["sales.create"] },
   products: { allOf: ["products.read"] },
   customers: {
@@ -181,6 +182,9 @@ describe("protected page permission rules", () => {
     expect(canAccessPage("dashboard", ["orders.read_all"])).toBe(true);
     expect(canAccessPage("productAnalysis", ["orders.read_all"])).toBe(true);
     expect(canAccessPage("productAnalysis", ["orders.read_own"])).toBe(true);
+    expect(canAccessPage("salesAnalysis", ["orders.read_own"])).toBe(true);
+    expect(canAccessPage("salesAnalysis", ["orders.read_all"])).toBe(true);
+    expect(canAccessPage("salesAnalysis", ["products.read"])).toBe(false);
     expect(canAccessPage("productAnalysis", ["products.read"])).toBe(false);
   });
 

@@ -39,13 +39,10 @@ import {
   clearProductAnalysisCacheForUser,
 } from "@/lib/product-analysis-cache";
 import {
-  fetchProductAnalysisCombos,
   fetchProductAnalysisMetric,
   fetchProductAnalysisProductPage,
-  readProductAnalysisComboCache,
   readProductAnalysisMetricCache,
   readProductAnalysisProductPageCache,
-  type ProductAnalysisComboWidget,
   type ProductAnalysisMetric,
   type ProductAnalysisMetricWidget,
   type ProductAnalysisProductPage,
@@ -55,7 +52,6 @@ import {
   type ProductAnalysisMetricDay,
   type ProductAnalysisMetricTotal,
   type ProductAnalysisProduct,
-  type ProductComboSuggestion,
   grossProfitPerUnitChartValue,
   productIdFromAnalysisKey,
 } from "@/lib/product-analysis";
@@ -169,36 +165,6 @@ function useProductAnalysisProductPage(
     enabled: Boolean(userId) && enabled,
     queryFn: () =>
       fetchProductAnalysisProductPage(supabase, userId, scope, range, input),
-    initialData,
-    initialDataUpdatedAt: 0,
-    staleTime: PRODUCT_ANALYSIS_QUERY_STALE_TIME,
-    gcTime: PRODUCT_ANALYSIS_QUERY_GC_TIME,
-    refetchOnWindowFocus: false,
-  });
-}
-
-function useProductAnalysisCombos(
-  supabase: ReturnType<typeof createClient>,
-  userId: string,
-  scope: string,
-  range: AnalysisRange,
-  enabled: boolean,
-) {
-  const initialData = useMemo(
-    () => readProductAnalysisComboCache(userId, scope, range) ?? undefined,
-    [range, scope, userId],
-  );
-  return useQuery<ProductAnalysisComboWidget>({
-    queryKey: [
-      "product-analysis",
-      "combos",
-      userId,
-      scope,
-      range.from,
-      range.to,
-    ],
-    enabled: Boolean(userId) && enabled,
-    queryFn: () => fetchProductAnalysisCombos(supabase, userId, scope, range),
     initialData,
     initialDataUpdatedAt: 0,
     staleTime: PRODUCT_ANALYSIS_QUERY_STALE_TIME,
@@ -651,14 +617,6 @@ export default function ProductAnalysisPage() {
     tableInput,
     hasPageAccess,
   );
-  const comboQuery = useProductAnalysisCombos(
-    supabase,
-    userId,
-    scope,
-    range,
-    hasPageAccess,
-  );
-
   const totals = {
     quantity: quantityKpi.data?.total?.quantity ?? null,
     revenue: revenuePerProductKpi.data?.total?.revenue ?? null,
@@ -710,34 +668,6 @@ export default function ProductAnalysisPage() {
       },
     ];
   }, [displayedMetric]);
-
-  const comboColumns = useMemo<DataColumn<ProductComboSuggestion>[]>(
-    () => [
-      {
-        key: "pair",
-        label: "Sản phẩm thường mua cùng",
-        title: "Sản phẩm thường mua cùng",
-        sortable: false,
-        render: (combo) => (
-          <div className="product-analysis-combo-pair">
-            <span>{combo.first_product}</span>
-            <span aria-hidden="true">+</span>
-            <span>{combo.second_product}</span>
-          </div>
-        ),
-      },
-      {
-        key: "co_order_count",
-        label: "Đơn có cả hai",
-        title: "Đơn có cả hai",
-        sortable: false,
-        align: "right",
-        value: (combo) => combo.co_order_count,
-        render: (combo) => formatQuantity(combo.co_order_count),
-      },
-    ],
-    [],
-  );
 
   function selectMetric(nextMetric: AnalysisMetric) {
     setMetric(nextMetric);
@@ -795,7 +725,6 @@ export default function ProductAnalysisPage() {
     );
 
   const productRows = tableQuery.data?.rows ?? [];
-  const comboRows = comboQuery.data?.rows ?? [];
   const selectedProductCount = tableQuery.data?.totalRows ?? 0;
   const decileCount = tableQuery.data?.decileRows ?? 0;
 
@@ -804,7 +733,7 @@ export default function ProductAnalysisPage() {
       <div className="page-heading product-analysis-heading">
         <div>
           <h1>Phân tích hàng hóa</h1>
-          <p>Hiệu quả bán hàng và sản phẩm thường được mua cùng nhau.</p>
+          <p>Hiệu quả bán hàng theo từng hàng hóa.</p>
         </div>
         <DateRangeInput
           start={range.from}
@@ -816,12 +745,6 @@ export default function ProductAnalysisPage() {
             setPage(0);
           }}
         />
-      </div>
-
-      <div className="product-analysis-data-note" role="note">
-        Số lượng bán và doanh thu thuần chưa trừ hàng trả vì hệ thống hiện chưa
-        lưu dữ liệu trả hàng. Số lượng dùng theo dòng hóa đơn, giữ nguyên phần
-        lẻ và số lượng Combo đã bán.
       </div>
 
       <section className="product-analysis-kpis" aria-label="Chỉ số hàng hóa">
@@ -856,42 +779,6 @@ export default function ProductAnalysisPage() {
           />
         )}
       </section>
-
-      <div className="product-analysis-section-grid">
-        <section className="card product-analysis-placeholder">
-          <div className="product-analysis-section-heading">
-            <div>
-              <h2>Nhóm hàng bán chạy</h2>
-              <p>Top 10% theo doanh thu thuần</p>
-            </div>
-            <span className="product-analysis-status">
-              Chưa có dữ liệu nhóm
-            </span>
-          </div>
-          <div className="product-analysis-empty-state">
-            <strong>Chưa thể phân tích theo nhóm hàng</strong>
-            <span>
-              Danh mục sản phẩm hiện chưa có trường nhóm hàng để tổng hợp.
-            </span>
-          </div>
-        </section>
-        <section className="card product-analysis-placeholder">
-          <div className="product-analysis-section-heading">
-            <div>
-              <h2>Gợi ý theo khu vực</h2>
-              <p>Sản phẩm phù hợp với thị trường địa phương</p>
-            </div>
-            <span className="product-analysis-status">Chưa kết nối</span>
-          </div>
-          <div className="product-analysis-empty-state">
-            <strong>Nguồn dữ liệu thị trường chưa được kết nối</strong>
-            <span>
-              Trang không hiển thị gợi ý khu vực khi chưa có nguồn dữ liệu đối
-              chiếu.
-            </span>
-          </div>
-        </section>
-      </div>
 
       <section className="card product-analysis-card product-analysis-products">
         <div className="product-analysis-section-heading product-analysis-table-heading">
@@ -1082,45 +969,6 @@ export default function ProductAnalysisPage() {
         </div>
       </section>
 
-      <section className="card product-analysis-card product-analysis-combos">
-        <div className="product-analysis-section-heading">
-          <div>
-            <h2>Hàng thường được mua cùng</h2>
-            <p>Cặp sản phẩm cùng xuất hiện trong đơn hoàn tất</p>
-          </div>
-        </div>
-        {widgetError(
-          comboQuery,
-          "Không làm mới được bảng mua cùng",
-          () => void comboQuery.refetch(),
-        )}
-        <div className="product-analysis-data-table">
-          {comboQuery.isPending && !comboQuery.data ? (
-            <LoadingSkeleton rows={3} />
-          ) : (
-            <DataTable
-              rows={comboRows}
-              columns={comboColumns}
-              rowKey={(combo) => combo.key}
-              empty={
-                <span>Chưa có đủ dữ liệu đơn hàng để tìm cặp sản phẩm.</span>
-              }
-              storageKey="analysis-products-combos"
-              title="Sản phẩm mua cùng"
-              toolbarSummary={`${formatQuantity(comboRows.length)} cặp sản phẩm`}
-              showSummaryRow={false}
-              serverSort={{ value: null, onChange: () => undefined }}
-              totalRows={comboRows.length}
-            />
-          )}
-        </div>
-        <div className="product-analysis-table-footer">
-          <span>
-            Tối đa 10 cặp có tần suất cao nhất
-            {comboQuery.isFetching && comboQuery.data ? " · Đang cập nhật" : ""}
-          </span>
-        </div>
-      </section>
       <ConfirmDialog
         request={
           pendingProductOrdersNavigation

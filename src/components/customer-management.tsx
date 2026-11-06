@@ -1,8 +1,7 @@
 "use client";
 
 import { AppButton } from "@/components/app-button";
-import { AppInput } from "@/components/app-input";
-import { AppTextarea } from "@/components/app-textarea";
+import { CustomerEditorDialog } from "@/components/customer-editor-dialog";
 
 import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2, X } from "lucide-react";
@@ -25,7 +24,6 @@ import { useDebounce } from "@/lib/debounce";
 import { useQueryClient } from "@tanstack/react-query";
 import { fetchCachedQuery } from "@/lib/query-cache";
 import { useInitialTableLoading } from "@/lib/use-initial-table-loading";
-import { useForm } from "react-hook-form";
 import {
   DataExportFieldModal,
   DataExportMenu,
@@ -36,7 +34,6 @@ import { createCsv, downloadCsvFile } from "@/lib/csv-export";
 import { useStableCallback } from "@/lib/use-stable-callback";
 import { usePathname } from "next/navigation";
 import { EntityDetailModal } from "@/components/entity-detail-modal";
-import { ModalLayer } from "@/components/modal-layer";
 import { useEntityDetailId } from "@/lib/use-entity-detail-id";
 import { mergeClassNames } from "@/lib/class-names";
 
@@ -77,9 +74,6 @@ export function CustomerManagement({
     id: string;
     message: string;
   } | null>(null);
-  const { register, handleSubmit, reset } = useForm<Customer>({
-    defaultValues: { id: "", name: "", phone: "", address: "" },
-  });
   const [busy, setBusy] = useState(false);
   const [exportBusy, setExportBusy] = useState(false);
   const [detailExportOpen, setDetailExportOpen] = useState(false);
@@ -200,6 +194,7 @@ export function CustomerManagement({
     setError("");
     try {
       const payload = customerValues(values);
+      let savedCustomer: Customer;
       if (editing.id) {
         const patch = changedFieldPatch(editing, payload, [
           "name",
@@ -211,18 +206,26 @@ export function CustomerManagement({
             .from("customers")
             .update(patch)
             .eq("id", editing.id)
-            .select("id")
+            .select("id,name,phone,address")
             .single();
           if (result.error) throw result.error;
+          savedCustomer = result.data as Customer;
+        } else {
+          savedCustomer = { ...editing, ...payload };
         }
         setRows((current) =>
           current.map((customer) =>
-            customer.id === editing.id ? { ...customer, ...payload } : customer,
+            customer.id === editing.id ? savedCustomer : customer,
           ),
         );
       } else {
-        const result = await supabase.from("customers").insert(payload);
+        const result = await supabase
+          .from("customers")
+          .insert(payload)
+          .select("id,name,phone,address")
+          .single();
         if (result.error) throw result.error;
+        savedCustomer = result.data as Customer;
       }
       setEditing(null);
       await Promise.all([
@@ -437,7 +440,6 @@ export function CustomerManagement({
               onClick={() => {
                 setError("");
                 const blank = { id: "", name: "", phone: "", address: "" };
-                reset(blank);
                 setEditing(blank);
               }}
             >
@@ -627,7 +629,6 @@ export function CustomerManagement({
                     aria-label="Chỉnh sửa khách hàng"
                     onClick={() => {
                       setError("");
-                      reset(activeCustomer);
                       setEditing(activeCustomer);
                       closeCustomerDetail();
                     }}
@@ -712,68 +713,13 @@ export function CustomerManagement({
         }}
       />
       {editing && (
-        <ModalLayer
-          className="modal-backdrop"
-          onEscape={() => setEditing(null)}
-        >
-          <form
-            className="modal card"
-            role="dialog"
-            aria-modal="true"
-            aria-label={editing.id ? "Sửa khách hàng" : "Thêm khách hàng"}
-            onSubmit={handleSubmit(save)}
-          >
-            <h2>{editing.id ? "Sửa khách hàng" : "Thêm khách hàng"}</h2>
-            <div style={{ display: "grid", gap: 13 }}>
-              <label className="form-label">
-                Tên khách hàng
-                <AppInput
-                  className="field"
-                  autoFocus
-                  required
-                  maxLength={300}
-                  {...register("name", { required: true, maxLength: 300 })}
-                />
-              </label>
-              <label className="form-label">
-                Số điện thoại
-                <AppInput
-                  className="field"
-                  type="tel"
-                  maxLength={100}
-                  {...register("phone", { maxLength: 100 })}
-                />
-              </label>
-              <label className="form-label">
-                Địa chỉ
-                <AppTextarea
-                  noBorder
-                  maxLength={1000}
-                  {...register("address", { maxLength: 1000 })}
-                />
-              </label>
-            </div>
-            {error && (
-              <div className="alert" role="alert">
-                {error}
-              </div>
-            )}
-            <div className="form-actions">
-              <AppButton
-                variant="secondary"
-                type="button"
-
-                disabled={busy}
-                onClick={() => setEditing(null)}
-              >
-                Hủy
-              </AppButton>
-              <AppButton variant="primary" disabled={busy}>
-                {busy ? "Đang lưu…" : "Lưu khách hàng"}
-              </AppButton>
-            </div>
-          </form>
-        </ModalLayer>
+        <CustomerEditorDialog
+          customer={editing}
+          busy={busy}
+          error={error}
+          onClose={() => setEditing(null)}
+          onSave={save}
+        />
       )}
     </>
   );

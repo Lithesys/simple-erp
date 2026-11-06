@@ -20,17 +20,9 @@
   width: min(100%, 280px);
 }
 
-.product-analysis-data-note,
 .product-analysis-inline-note {
   color: var(--text-secondary);
   font-size: 12px;
-}
-
-.product-analysis-data-note {
-  padding: 9px 12px;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  background: var(--surface-subtle);
 }
 
 .product-analysis-kpis {
@@ -123,20 +115,9 @@
   font-size: 11px;
 }
 
-.product-analysis-section-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.product-analysis-placeholder,
 .product-analysis-card {
   min-width: 0;
   overflow: hidden;
-}
-
-.product-analysis-placeholder {
-  padding: 15px;
 }
 
 .product-analysis-section-heading {
@@ -184,8 +165,7 @@
   padding: 0;
 }
 
-.product-analysis-products > .product-analysis-section-heading,
-.product-analysis-combos > .product-analysis-section-heading {
+.product-analysis-products > .product-analysis-section-heading {
   padding: 15px 16px 12px;
 }
 
@@ -261,26 +241,6 @@
   text-align: right;
 }
 
-.product-analysis-combos .product-analysis-data-table .app-table th:first-child,
-.product-analysis-combos
-  .product-analysis-data-table
-  .app-table
-  td:first-child {
-  width: 72%;
-}
-
-.product-analysis-combos
-  .product-analysis-data-table
-  .app-table
-  th:nth-child(2),
-.product-analysis-combos
-  .product-analysis-data-table
-  .app-table
-  td:nth-child(2) {
-  width: 28%;
-  text-align: right;
-}
-
 .product-analysis-name-cell {
   display: grid;
   min-width: 0;
@@ -295,16 +255,6 @@
 .product-analysis-name-cell span {
   color: var(--text-secondary);
   font-size: 11px;
-}
-
-.product-analysis-combo-pair {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.product-analysis-combo-pair > span:nth-child(2) {
-  color: var(--text-secondary);
 }
 
 .product-analysis-table-footer,
@@ -382,19 +332,8 @@
     height: 34px;
   }
 
-  .app-shell.mobile-route .product-analysis-section-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .app-shell.mobile-route .product-analysis-placeholder {
-    padding: 12px;
-  }
-
   .app-shell.mobile-route
     .product-analysis-products
-    > .product-analysis-section-heading,
-  .app-shell.mobile-route
-    .product-analysis-combos
     > .product-analysis-section-heading {
     align-items: flex-start;
     flex-direction: column;
@@ -453,9 +392,4 @@
     width: 100%;
   }
 
-  .app-shell.mobile-route .product-analysis-combo-pair {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 3px;
-  }
 }

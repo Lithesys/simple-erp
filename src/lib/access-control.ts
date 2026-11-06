@@ -53,6 +53,7 @@ export type PermissionPolicy = {
 export const PAGE_ACCESS_RULES = {
   dashboard: { anyOf: ["orders.read_own", "orders.read_all"] },
   productAnalysis: { anyOf: ["orders.read_own", "orders.read_all"] },
+  salesAnalysis: { anyOf: ["orders.read_own", "orders.read_all"] },
   pos: { allOf: ["sales.create"] },
   products: { allOf: ["products.read"] },
   customers: {
@@ -105,6 +106,7 @@ export type PageAccessKey = keyof typeof PAGE_ACCESS_RULES;
 export const PAGE_PATHS: Record<PageAccessKey, string> = {
   dashboard: "/dashboard",
   productAnalysis: "/analysis/products",
+  salesAnalysis: "/analysis/sales",
   pos: "/pos",
   products: "/management/products",
   customers: "/management/customers",
@@ -219,6 +221,7 @@ export function getLandingPath(permissions: readonly Permission[]) {
     "pos",
     "dashboard",
     "products",
+    "salesAnalysis",
     "purchase",
     "stockCheck",
     "customers",

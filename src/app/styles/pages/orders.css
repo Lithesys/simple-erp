@@ -321,9 +321,9 @@
   left: 0;
   z-index: 90;
   display: grid;
-  width: min(590px, calc(100vw - 32px));
+  width: min(400px, calc(100vw - 32px));
   max-height: calc(100vh - 150px);
-  gap: 10px;
+  gap: 9px;
   overflow: visible;
   padding: 12px;
   border: 1px solid var(--border);
@@ -335,7 +335,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
-  gap: 8px;
+  gap: 9px;
 }
 .orders-filter-grid .form-label {
   min-width: 0;
@@ -462,7 +462,7 @@
 .orders-filter-statuses {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px 12px;
   padding-top: 12px;
   border-top: 1px solid var(--border-subtle);
 }
@@ -496,4 +496,14 @@
   justify-content: flex-end;
   padding-top: 8px;
   border-top: 1px solid var(--border-subtle);
+}
+.filter-clear-button {
+  border-color: transparent;
+  border-radius: 10px;
+  background: var(--primary-subtle);
+  color: var(--primary);
+}
+.filter-clear-button:hover {
+  background: var(--primary-subtle);
+  color: var(--primary);
 }

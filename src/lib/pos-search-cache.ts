@@ -169,6 +169,27 @@ export async function writePosSearchCache(
   customerIndexes.delete(userId);
 }
 
+export async function upsertPosSearchCustomer(
+  supabase: SupabaseClient,
+  customer: Customer,
+) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user.id) return;
+  const cache = await readPosSearchCache(session.user.id);
+  if (!cache) return;
+  await writePosSearchCache(session.user.id, {
+    products: cache.products,
+    priceLists: cache.priceLists,
+    customers: [
+      customer,
+      ...cache.customers.filter((item) => item.id !== customer.id),
+    ],
+    customersSavedAt: Date.now(),
+  });
+}
+
 export async function clearPosSearchCache(userId: string) {
   customerIndexes.delete(userId);
   loadedCaches.delete(userId);

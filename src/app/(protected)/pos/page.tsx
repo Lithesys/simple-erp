@@ -18,6 +18,14 @@ export default function PosPage() {
   return (
     <PointOfSale
       canEditPrice={canPerformAction("pos.editPrice", access.permissions)}
+      canCreateCustomer={canPerformAction(
+        "customers.create",
+        access.permissions,
+      )}
+      canUpdateCustomer={canPerformAction(
+        "customers.update",
+        access.permissions,
+      )}
     />
   );
 }

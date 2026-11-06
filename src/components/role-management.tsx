@@ -5,7 +5,7 @@ import { AppInput } from "@/components/app-input";
 import { ModalLayer } from "@/components/modal-layer";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pencil, Plus, Shield, Trash2, X } from "lucide-react";
+import { CircleAlert, Pencil, Plus, Shield, Trash2, X } from "lucide-react";
 import { createClient } from "@/lib/data/client";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
 import {
@@ -25,7 +25,17 @@ type Role = {
   permissions: string[];
   is_system: boolean;
 };
-const permissionCategories = [
+type PermissionOption = {
+  permission: string;
+  permissions?: string[];
+  label: string;
+  description?: string;
+};
+
+const permissionCategories: {
+  category: string;
+  permissions: PermissionOption[];
+}[] = [
   {
     category: "Hàng hóa",
     permissions: [
@@ -33,11 +43,8 @@ const permissionCategories = [
       { permission: "products.create", label: "Tạo hàng hóa" },
       {
         permission: "products.update",
-        label: "Sửa tên, đơn vị và giá hàng hóa",
-      },
-      {
-        permission: "products.archive",
-        label: "Ngừng kinh doanh hoặc mở bán lại hàng hóa",
+        permissions: ["products.update", "products.archive"],
+        label: "Chỉnh sửa hàng hoá",
       },
       { permission: "products.cost.read", label: "Xem giá vốn" },
     ],
@@ -45,15 +52,15 @@ const permissionCategories = [
   {
     category: "Đơn hàng",
     permissions: [
-      { permission: "orders.read_own", label: "Xem đơn của mình" },
-      { permission: "orders.read_all", label: "Xem toàn bộ đơn hàng" },
       {
-        permission: "orders.edit",
-        label: "Chỉnh sửa đơn hàng, số lượng và khách hàng",
+        permission: "orders.read_own",
+        permissions: ["orders.read_own", "orders.read_all"],
+        label: "Xem đơn hàng",
       },
+      { permission: "orders.edit", label: "Chỉnh sửa đơn hàng" },
       {
         permission: "orders.delete",
-        label: "Hủy đơn hàng, cộng lại tồn kho và không thể khôi phục",
+        label: "Huỷ đơn hàng",
       },
     ],
   },
@@ -71,7 +78,7 @@ const permissionCategories = [
     category: "Khách hàng",
     permissions: [
       { permission: "customers.create", label: "Thêm khách hàng" },
-      { permission: "customers.read", label: "Tìm và xem khách hàng" },
+      { permission: "customers.read", label: "Xem khách hàng" },
       { permission: "customers.update", label: "Sửa khách hàng" },
       { permission: "customers.delete", label: "Xóa khách hàng" },
     ],
@@ -81,7 +88,7 @@ const permissionCategories = [
     permissions: [
       { permission: "debts.read", label: "Xem danh sách nợ" },
       { permission: "debts.create", label: "Thêm khoản nợ" },
-      { permission: "debts.update", label: "Sửa khoản nợ và trạng thái trả" },
+      { permission: "debts.update", label: "Sửa khoản nợ" },
       { permission: "debts.delete", label: "Xóa khoản nợ" },
       { permission: "debts.report", label: "Xem báo cáo nợ" },
     ],
@@ -91,12 +98,12 @@ const permissionCategories = [
     permissions: [
       {
         permission: "purchases.read",
-        label: "Xem danh sách và chi tiết đơn nhập",
+        label: "Xem đơn nhập hàng",
       },
       { permission: "purchases.create", label: "Tạo đơn nhập hàng" },
       { permission: "purchases.update", label: "Sửa đơn nhập hàng" },
       { permission: "purchases.delete", label: "Xóa hoặc hủy đơn nhập hàng" },
-      { permission: "purchases.approve", label: "Duyệt đơn và nhập kho" },
+      { permission: "purchases.approve", label: "Hoàn thành đơn nhập hàng" },
     ],
   },
   {
@@ -105,18 +112,17 @@ const permissionCategories = [
       { permission: "stock_checks.read", label: "Xem phiếu kiểm kho" },
       {
         permission: "stock_checks.create",
-        label: "Tạo và lưu tạm phiếu kiểm kho",
+        label: "Tạo phiếu kiểm kho",
       },
       { permission: "stock_checks.update", label: "Sửa phiếu kiểm kho" },
       {
         permission: "stock_checks.delete",
-        label: "Xóa phiếu tạm hoặc hủy phiếu đã xong",
+        label: "Xoá phiếu kiểm kho",
       },
       {
         permission: "stock_checks.complete",
-        label: "Hoàn thành hoặc hủy phiếu, cập nhật tồn kho",
+        label: "Hoàn thành phiếu kiểm kho",
       },
-      { permission: "stock_checks.export", label: "Xuất dữ liệu kiểm kho" },
     ],
   },
   {
@@ -132,7 +138,9 @@ const permissionCategories = [
       { permission: "roles.manage", label: "Quản lý vai trò" },
       {
         permission: "activity_history.read",
-        label: "Xem toàn bộ lịch sử thao tác, bao gồm giá vốn và giá bán",
+        label: "Xem lịch sử thao tác",
+        description:
+          "Người dùng có thể xem toàn bộ lịch sử thao tác, bao gồm giá vốn và giá bán trong các giao dịch.",
       },
     ],
   },
@@ -140,6 +148,20 @@ const permissionCategories = [
 const permissionGroups = permissionCategories.flatMap(
   (group) => group.permissions,
 );
+const hiddenPermissionLabels: Record<string, string> = {
+  "stock_checks.export": "Xuất dữ liệu kiểm kho",
+};
+
+function permissionLabel(permission: string) {
+  return (
+    permissionGroups.find(
+      (item) =>
+        item.permission === permission || item.permissions?.includes(permission),
+    )?.label ||
+    hiddenPermissionLabels[permission] ||
+    permission
+  );
+}
 
 export function RoleManagement() {
   const supabase = createClient();
@@ -320,11 +342,9 @@ export function RoleManagement() {
                   {role.is_system && role.name === "Admin"
                     ? "Toàn quyền quản trị"
                     : role.permissions
-                        .map(
-                          (key) =>
-                            permissionGroups.find(
-                              (item) => item.permission === key,
-                            )?.label || key,
+                        .map(permissionLabel)
+                        .filter((label, index, labels) =>
+                          labels.indexOf(label) === index,
                         )
                         .join(" · ") || "Chưa được cấp quyền"}
                 </div>
@@ -413,31 +433,66 @@ export function RoleManagement() {
                     >
                       <legend>{group.category}</legend>
                       {group.permissions.map((item) => (
-                        <label
-                          className="permission-option"
-                          key={item.permission}
-                        >
+                        <label className="permission-option" key={item.permission}>
                           <AppInput
                             type="checkbox"
-                            checked={
-                              selectedPermissions?.includes(item.permission) ??
-                              false
+                            checked={(item.permissions ?? [item.permission]).every(
+                              (permission) =>
+                                selectedPermissions?.includes(permission) ?? false,
+                            )}
+                            aria-checked={
+                              (item.permissions ?? [item.permission]).some(
+                                (permission) =>
+                                  selectedPermissions?.includes(permission) ??
+                                  false,
+                              ) &&
+                              !(item.permissions ?? [item.permission]).every(
+                                (permission) =>
+                                  selectedPermissions?.includes(permission) ??
+                                  false,
+                              )
+                                ? "mixed"
+                                : undefined
                             }
+                            ref={(input) => {
+                              if (!input) return;
+                              const permissions =
+                                item.permissions ?? [item.permission];
+                              const selectedCount = permissions.filter(
+                                (permission) =>
+                                  selectedPermissions?.includes(permission) ??
+                                  false,
+                              ).length;
+                              input.indeterminate =
+                                selectedCount > 0 &&
+                                selectedCount < permissions.length;
+                            }}
                             onChange={(e) => {
-                              const next = e.target.checked
-                                ? [
-                                    ...(selectedPermissions || []),
-                                    item.permission,
-                                  ]
-                                : (selectedPermissions || []).filter(
-                                    (value) => value !== item.permission,
-                                  );
-                              setValue("permissions", next, {
+                              const next = new Set(selectedPermissions || []);
+                              for (const permission of
+                                item.permissions ?? [item.permission]) {
+                                if (e.target.checked) next.add(permission);
+                                else next.delete(permission);
+                              }
+                              setValue("permissions", [...next], {
                                 shouldDirty: true,
                               });
                             }}
                           />
-                          {item.label}
+                          <span className="permission-option-label">
+                            {item.label}
+                            {item.description && (
+                              <span
+                                className="permission-info"
+                                title={item.description}
+                                aria-label={item.description}
+                                role="img"
+                                tabIndex={0}
+                              >
+                                <CircleAlert size={14} aria-hidden="true" />
+                              </span>
+                            )}
+                          </span>
                         </label>
                       ))}
                     </fieldset>

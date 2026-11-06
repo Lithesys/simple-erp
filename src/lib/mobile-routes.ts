@@ -5,6 +5,7 @@ const routePairs = [
   ["/dashboard", "/mobile/dashboard"],
   ["/debt", "/mobile/debt"],
   ["/analysis/products", "/mobile/analysis/products"],
+  ["/analysis/sales", "/mobile/analysis/sales"],
   ["/management/accounts", "/mobile/management/accounts"],
   ["/management/customers", "/mobile/management/customers"],
   ["/management/orders", "/mobile/management/orders"],

@@ -4,6 +4,7 @@ import { AppButton } from "@/components/app-button";
 import { AppInput } from "@/components/app-input";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { Plus, Pencil } from "lucide-react";
 import { createClient } from "@/lib/data/client";
 import { SearchInputField } from "@/components/search-input-field";
 import type { Customer } from "@/lib/customers";
@@ -28,6 +29,9 @@ export function CustomerPicker({
   onEnter,
   placeholder = "Tìm theo tên, sđt hoặc địa chỉ · F4",
   suggestionsEnabled = true,
+  canCreateCustomer = false,
+  onCreateCustomer,
+  onEditCustomer,
 }: {
   value: CustomerContact;
   onChange: (value: CustomerContact) => void;
@@ -41,6 +45,9 @@ export function CustomerPicker({
   onEnter?: () => void;
   placeholder?: string;
   suggestionsEnabled?: boolean;
+  canCreateCustomer?: boolean;
+  onCreateCustomer?: () => void;
+  onEditCustomer?: (customer: CustomerContact) => void;
 }) {
   const supabase = createClient();
   const queryClient = useQueryClient();
@@ -50,6 +57,7 @@ export function CustomerPicker({
   const [activeIndex, setActiveIndex] = useState(0);
   const [status, setStatus] = useState("");
   const [selected, setSelected] = useState(false);
+  const [selecting, setSelecting] = useState(!value.id);
   const localInputRef = useRef<HTMLInputElement>(null);
   const resolvedInputRef = inputRef ?? localInputRef;
   const menuRef = useRef<HTMLDivElement>(null);
@@ -176,6 +184,7 @@ export function CustomerPicker({
       address: customer.address,
     });
     setSelected(true);
+    setSelecting(false);
     setOpen(false);
   }
   return (
@@ -201,63 +210,116 @@ export function CustomerPicker({
             setOpen(false);
         }}
       >
-        <div className={showInputLabel ? "form-label" : undefined}>
-          {showInputLabel && <span>{searchLabel}</span>}
-          <SearchInputField
-            ref={resolvedInputRef}
-            className={showSearchIcon ? "" : "customer-picker-input"}
-            showSearchIcon={showSearchIcon}
-            aria-label={searchLabel}
-            role="combobox"
-            aria-keyshortcuts="F4"
-            aria-autocomplete="list"
-            aria-expanded={open && suggestionsEnabled}
-            aria-controls={suggestionsEnabled ? listboxId : undefined}
-            aria-activedescendant={
-              open && suggestionsEnabled && rows[activeIndex]
-                ? `${listboxId}-option-${activeIndex}`
-                : undefined
-            }
-            autoComplete="off"
-            disabled={disabled}
-            maxLength={300}
-            placeholder={placeholder}
-            value={value.name}
-            onFocus={() => setOpen(true)}
-            onChange={(name) => {
-              onChange({
-                id: "",
-                name,
-                phone: selected ? "" : value.phone,
-                address: selected ? "" : value.address,
-              });
-              setSelected(false);
-              setRows([]);
-              setOpen(true);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Escape") setOpen(false);
-              if (event.key === "Enter") {
-                event.preventDefault();
-                if (open && rows[activeIndex]) {
-                  choose(rows[activeIndex]);
-                  onEnter?.();
-                } else if (value.id) {
-                  onEnter?.();
+        <div className="pos-customer-search-row">
+          <div className={showInputLabel ? "form-label" : undefined}>
+            {showInputLabel && <span>{searchLabel}</span>}
+            {value.id && !selecting ? (
+              onEditCustomer ? (
+                <AppButton
+                  variant="ghost"
+                  type="button"
+                  className="pos-customer-selected-value"
+                  disabled={disabled}
+                  aria-label={`Sửa khách hàng ${value.name}`}
+                  onClick={() => onEditCustomer(value)}
+                >
+                  <span>{value.name}</span>
+                  <Pencil size={14} aria-hidden="true" />
+                </AppButton>
+              ) : (
+                <div className="pos-customer-selected-value">
+                  <span>{value.name}</span>
+                </div>
+              )
+            ) : (
+              <SearchInputField
+                ref={resolvedInputRef}
+                className={showSearchIcon ? "" : "customer-picker-input"}
+                showSearchIcon={showSearchIcon}
+                aria-label={searchLabel}
+                role="combobox"
+                aria-keyshortcuts={searchOnly ? undefined : "F4"}
+                aria-autocomplete="list"
+                aria-expanded={open && suggestionsEnabled}
+                aria-controls={suggestionsEnabled ? listboxId : undefined}
+                aria-activedescendant={
+                  open && suggestionsEnabled && rows[activeIndex]
+                    ? `${listboxId}-option-${activeIndex}`
+                    : undefined
                 }
-                return;
-              }
-              if (!open || !rows.length) return;
-              if (event.key === "ArrowDown") {
-                event.preventDefault();
-                setActiveIndex((activeIndex + 1) % rows.length);
-              }
-              if (event.key === "ArrowUp") {
-                event.preventDefault();
-                setActiveIndex((activeIndex + rows.length - 1) % rows.length);
-              }
-            }}
-          />
+                autoComplete="off"
+                disabled={disabled}
+                maxLength={300}
+                placeholder={placeholder}
+                value={value.name}
+                onFocus={() => setOpen(true)}
+                onChange={(name) => {
+                  onChange({
+                    id: "",
+                    name,
+                    phone: selected ? "" : value.phone,
+                    address: selected ? "" : value.address,
+                  });
+                  setSelected(false);
+                  setSelecting(true);
+                  setRows([]);
+                  setOpen(true);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") setOpen(false);
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    if (open && rows[activeIndex]) {
+                      choose(rows[activeIndex]);
+                      onEnter?.();
+                    } else if (value.id) {
+                      onEnter?.();
+                    }
+                    return;
+                  }
+                  if (!open || !rows.length) return;
+                  if (event.key === "ArrowDown") {
+                    event.preventDefault();
+                    setActiveIndex((activeIndex + 1) % rows.length);
+                  }
+                  if (event.key === "ArrowUp") {
+                    event.preventDefault();
+                    setActiveIndex((activeIndex + rows.length - 1) % rows.length);
+                  }
+                }}
+              />
+            )}
+          </div>
+          {canCreateCustomer && onCreateCustomer && (
+            <AppButton
+              variant="ghost"
+              type="button"
+              iconOnly
+              className="pos-customer-create"
+              aria-label="Thêm khách hàng"
+              title="Thêm khách hàng"
+              disabled={disabled}
+              onClick={onCreateCustomer}
+            >
+              <Plus size={18} aria-hidden="true" />
+            </AppButton>
+          )}
+          {value.id && !selecting && (
+            <AppButton
+              variant="ghost"
+              type="button"
+              className="pos-customer-change"
+              disabled={disabled}
+              onClick={() => {
+                onChange({ id: "", name: "", phone: "", address: "" });
+                setSelecting(true);
+                setOpen(true);
+                requestAnimationFrame(() => resolvedInputRef.current?.focus());
+              }}
+            >
+              Đổi
+            </AppButton>
+          )}
         </div>
       </div>
       {open &&

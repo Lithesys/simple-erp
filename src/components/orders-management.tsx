@@ -2049,6 +2049,7 @@ export function OrdersManagement({
                   <CustomerPicker
                     searchOnly
                     searchLabel="Theo tên hoặc SĐT khách hàng"
+                    placeholder="Tìm theo tên, sđt hoặc địa chỉ"
                     showSearchIcon={false}
                     suggestionsEnabled={canSearchCustomers}
                     disabled={false}
@@ -2085,6 +2086,7 @@ export function OrdersManagement({
                   <AppButton
                     variant="ghost"
                     type="button"
+                    className="filter-clear-button"
                     onClick={clearFilters}
                   >
                     Xóa bộ lọc

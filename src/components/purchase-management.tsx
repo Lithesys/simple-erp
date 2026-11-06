@@ -1386,6 +1386,7 @@ export function PurchaseManagement({
                     <AppButton
                       variant="ghost"
                       type="button"
+                      className="filter-clear-button"
                       onClick={clearPurchaseFilters}
                     >
                       Xóa bộ lọc
