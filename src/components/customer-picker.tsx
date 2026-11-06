@@ -4,7 +4,7 @@ import { AppButton } from "@/components/app-button";
 import { AppInput } from "@/components/app-input";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { createClient } from "@/lib/data/client";
 import { SearchInputField } from "@/components/search-input-field";
 import type { Customer } from "@/lib/customers";
@@ -240,7 +240,6 @@ export function CustomerPicker({
                     onClick={() => onEditCustomer(value)}
                   >
                     <span>{value.name}</span>
-                    <Pencil size={14} aria-hidden="true" />
                   </AppButton>
                 ) : (
                   <div className="pos-customer-selected-value">
@@ -315,7 +314,14 @@ export function CustomerPicker({
             <AppButton
               variant="ghost"
               type="button"
-              className="pos-customer-change"
+              className={
+                compact
+                  ? "pos-customer-change pos-customer-clear"
+                  : "pos-customer-change"
+              }
+              iconOnly={compact}
+              aria-label={compact ? "Xóa khách hàng đã chọn" : "Đổi khách hàng"}
+              title={compact ? "Xóa khách hàng" : undefined}
               disabled={disabled}
               onClick={() => {
                 onChange({ id: "", name: "", phone: "", address: "" });
@@ -324,7 +330,7 @@ export function CustomerPicker({
                 requestAnimationFrame(() => resolvedInputRef.current?.focus());
               }}
             >
-              Đổi
+              {compact ? <X size={16} aria-hidden="true" /> : "Đổi"}
             </AppButton>
           )}
         </div>

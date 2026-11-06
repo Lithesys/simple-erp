@@ -127,6 +127,9 @@
   min-width: 0;
   margin-top: 7px;
 }
+.pos-panel .pos-customer-selected-field {
+  margin-top: 0;
+}
 .pos-customer-selected-value {
   display: flex;
   width: 100%;
@@ -147,15 +150,20 @@
   right: 4px;
   transform: translateY(-50%);
 }
-.pos-customer-selected-value > svg {
-  position: absolute;
-  right: 40px;
+.pos-panel .pos-customer-selected-field .pos-customer-selected-value {
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 0;
+  padding: 0 52px 0 11px;
 }
 .pos-customer-selected-value:not(:disabled):hover {
   color: var(--primary);
 }
-.pos-customer-selected-value > span {
+.pos-panel .pos-customer-selected-field .pos-customer-selected-value > span {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
+  padding-right: 8px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -164,6 +172,16 @@
   align-self: end;
   padding: 0 6px;
   color: var(--text-secondary);
+}
+.pos-customer-search-row .pos-customer-clear {
+  display: grid;
+  width: var(--control-height-compact);
+  min-width: var(--control-height-compact);
+  height: var(--control-height-compact);
+  min-height: var(--control-height-compact);
+  align-self: end;
+  place-items: center;
+  padding: 0;
 }
 .pos-panel > .form-label:has(#pos-price-list) {
   grid-column: 2;
