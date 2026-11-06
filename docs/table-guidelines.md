@@ -21,7 +21,7 @@ Tài liệu này là nguồn hướng dẫn bắt buộc cho mọi thay đổi t
 ### Bộ lọc bên trái
 
 - Panel filter bên trái phải dùng một wrapper React dùng chung trong `src/components/`; không tự dựng `<aside>` và cấu trúc panel riêng trong màn hình bảng.
-- Hiện các màn hình đang có một số wrapper sidebar theo trang, chưa có primitive sidebar filter chung. Khi tạo bảng mới hoặc thay đổi cấu trúc sidebar hiện có, hãy trích xuất hoặc mở rộng wrapper dùng chung trong cùng thay đổi rồi dùng lại ở màn hình liên quan. Giữ các field, query, quyền và quy tắc nghiệp vụ ở màn hình sở hữu filter; wrapper chỉ chuẩn hóa khung, nhãn truy cập được, heading, vùng nội dung và footer khi có.
+- Dùng `FilterPanel` từ `src/components/filter-panel.tsx` cho sidebar filter. Wrapper chuẩn hóa khung, nhãn truy cập được và heading; field, query, quyền, footer và quy tắc nghiệp vụ thuộc màn hình sở hữu filter.
 - Không dùng chung state/query giữa các trang chỉ để dùng chung khung. Giữ debounce, đồng bộ URL, hành vi áp dụng/xóa filter và responsive theo hợp đồng của trang.
 - Filter dạng popover vẫn dùng primitive filter/popover chung hiện có của ứng dụng; không biến popover thành sidebar riêng hoặc sao chép logic dismiss/focus.
 

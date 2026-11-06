@@ -867,6 +867,7 @@ export function PointOfSale({
             className="pos-search-field"
             ref={productSearchRef}
             autoFocus
+            aria-label="Tìm hàng hóa trong POS"
             aria-keyshortcuts="F3"
             placeholder="Nhập tên hoặc mã hàng hóa · F3"
             value={query}

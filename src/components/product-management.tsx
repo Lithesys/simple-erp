@@ -3,6 +3,7 @@
 import { AppButton } from "@/components/app-button";
 import { AppInput } from "@/components/app-input";
 import { AppTable } from "@/components/app-table";
+import { FilterPanel } from "@/components/filter-panel";
 import { mergeClassNames } from "@/lib/class-names";
 
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
@@ -1964,11 +1965,7 @@ export function ProductManagement({
         </div>
       )}
       <div className="product-workspace">
-        <aside className="product-filters card" aria-label="Bộ lọc hàng hóa">
-          <div className="filter-panel-title">
-            <Boxes size={17} />
-            <span>Bộ lọc</span>
-          </div>
+        <FilterPanel ariaLabel="Bộ lọc hàng hóa" icon={<Boxes size={17} />}>
           <label className="filter-label" htmlFor="product-search">
             Tìm hàng hóa
           </label>
@@ -2056,7 +2053,7 @@ export function ProductManagement({
           >
             Xóa bộ lọc
           </AppButton>
-        </aside>
+        </FilterPanel>
         <div
           className={mergeClassNames(
             "product-results",

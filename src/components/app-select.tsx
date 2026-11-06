@@ -24,6 +24,7 @@ type AppSelectProps = {
   isClearable?: boolean;
   isSearchable?: boolean;
   showSearchIcon?: boolean;
+  onSearchInputChange?: (value: string) => void;
 };
 
 const styles: StylesConfig<
@@ -155,6 +156,7 @@ export function AppSelect(props: AppSelectProps | AppMultiSelectProps) {
     isClearable = false,
     isSearchable = false,
     showSearchIcon = true,
+    onSearchInputChange,
     isMulti = false,
   } = props;
   const generatedId = useId();
@@ -181,6 +183,10 @@ export function AppSelect(props: AppSelectProps | AppMultiSelectProps) {
       value={selected}
       isMulti={isMulti}
       closeMenuOnSelect={!isMulti}
+      onInputChange={(inputValue) => {
+        onSearchInputChange?.(inputValue);
+        return inputValue;
+      }}
       onChange={(option) =>
         isMulti
           ? (onChange as AppMultiSelectProps["onChange"])(

@@ -260,12 +260,14 @@
     padding-inline: 8px;
   }
 
-  .pos-order-note {
+  .pos-bottom .pos-order-note {
     width: min(300px, 48%);
     min-width: 0;
+    height: 52px;
     min-height: 52px;
+    max-height: 52px;
     padding: 7px 9px;
-    resize: vertical;
+    resize: none;
   }
 
   .pos-panel-top {

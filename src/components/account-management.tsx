@@ -293,9 +293,13 @@ export function AccountManagement() {
       )}
       <div className="customer-table-workspace">
         <aside className="product-filters card">
-          <label className="filter-label">Tìm tài khoản</label>
+          <label className="filter-label" htmlFor="account-search">
+            Tìm tài khoản
+          </label>
           <SearchInputField
+            id="account-search"
             showSearchIcon={false}
+            aria-label="Tìm tài khoản"
             placeholder="Email hoặc tên hiển thị"
             value={query}
             onChange={setQuery}

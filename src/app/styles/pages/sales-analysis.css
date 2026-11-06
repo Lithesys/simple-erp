@@ -46,25 +46,6 @@
   font-weight: var(--weight-medium);
 }
 
-.sales-analysis-radio {
-  display: flex;
-  min-height: 34px;
-  align-items: center;
-  gap: 8px;
-  padding: 0 9px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-input);
-  color: var(--text-secondary);
-  font-weight: var(--weight-regular);
-}
-
-.sales-analysis-radio input[type="radio"] {
-  width: 16px;
-  height: 16px;
-  margin: 0;
-  accent-color: var(--primary);
-}
-
 .sales-analysis-date-range {
   width: 100%;
   min-width: 0;
@@ -125,6 +106,10 @@
 
 .sales-analysis-report-amount {
   text-align: right;
+  white-space: nowrap;
+}
+
+.sales-analysis-report thead th {
   white-space: nowrap;
 }
 

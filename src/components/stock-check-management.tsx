@@ -3,7 +3,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { Ban, Check, Pencil, Plus, Printer, Trash2, X } from "lucide-react";
+import {
+  Ban,
+  Boxes,
+  Check,
+  Pencil,
+  Plus,
+  Printer,
+  Trash2,
+  X,
+} from "lucide-react";
 import { toast } from "react-toastify";
 import { AppButton } from "@/components/app-button";
 import { AppInput } from "@/components/app-input";
@@ -15,6 +24,8 @@ import {
   type DataTableSort,
 } from "@/components/data-table";
 import { DateRangeInput } from "@/components/date-range-input";
+import { AppSelect } from "@/components/app-select";
+import { FilterPanel } from "@/components/filter-panel";
 import { MobileTableToolbarMetrics } from "@/components/mobile-table-toolbar-metrics";
 import { SearchInputField } from "@/components/search-input-field";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
@@ -140,6 +151,11 @@ export function StockCheckManagement({
   const [total, setTotal] = useState(0);
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query);
+  const [productFilterQuery, setProductFilterQuery] = useState("");
+  const debouncedProductFilterQuery = useDebounce(productFilterQuery);
+  const [productFilterIds, setProductFilterIds] = useState<string[]>([]);
+  const [filterProducts, setFilterProducts] = useState<StockCheckProduct[]>([]);
+  const [filterProductsError, setFilterProductsError] = useState("");
   const [dateRange, setDateRange] = useState({ from: "", to: "" });
   const [status, setStatus] = useState<"all" | StockCheckStatus>("all");
   const [sort, setSort] = useState<DataTableSort>(defaultSort);
@@ -173,6 +189,52 @@ export function StockCheckManagement({
   const { loading, finishInitialLoad } = useInitialTableLoading();
   const formRef = useRef<HTMLFormElement>(null);
   const openedStockCheckId = useRef<string | null>(null);
+  const selectedProductQuery = useMemo(() => {
+    const terms = productFilterIds
+      .map((id) => filterProducts.find((product) => product.id === id))
+      .filter((product): product is StockCheckProduct => Boolean(product))
+      .map((product) => product.sku || product.name);
+    // The existing RPC switches to item-only matching when it receives multiple terms.
+    if (terms.length === 1) terms.push(terms[0]);
+    return terms.join(",");
+  }, [filterProducts, productFilterIds]);
+
+  useEffect(() => {
+    if (!canList) return;
+    let active = true;
+    void (async () => {
+      try {
+        const result = await supabase.rpc("get_stock_check_products", {
+          p_query: debouncedProductFilterQuery,
+        });
+        if (result.error) throw result.error;
+        if (!active) return;
+        const loaded = (result.data || []) as StockCheckProduct[];
+        setFilterProducts((current) => {
+          const selectedIds = new Set(productFilterIds);
+          const retained = current.filter((product) =>
+            selectedIds.has(product.id),
+          );
+          const byId = new Map(
+            retained.map((product) => [product.id, product]),
+          );
+          for (const product of loaded) byId.set(product.id, product);
+          return [...byId.values()];
+        });
+        setFilterProductsError("");
+      } catch (caught) {
+        if (!active) return;
+        setFilterProductsError(
+          caught instanceof Error
+            ? caught.message
+            : "Không tải được danh sách hàng hóa để lọc.",
+        );
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [canList, debouncedProductFilterQuery, productFilterIds, supabase]);
 
   const load = useCallback(async () => {
     if (!canList) {
@@ -180,23 +242,47 @@ export function StockCheckManagement({
       return;
     }
     try {
-      const { data, error: loadError } = await supabase.rpc(
-        "get_stock_checks",
-        {
-          p_from: dateRange.from || null,
-          p_to: dateRange.to || null,
-          p_query: debouncedQuery,
-          p_statuses: status === "all" ? [] : [status],
-          p_sort: sort.key,
-          p_direction: sort.direction,
-          p_limit: 5000,
-          p_offset: 0,
-        },
+      const hasProductFilters = productFilterIds.length > 0;
+      const hasTextFilter = Boolean(debouncedQuery.trim());
+      if (productFilterIds.length && !selectedProductQuery) {
+        throw new Error("Không tìm thấy mã hàng của mặt hàng đã chọn.");
+      }
+      const queryTerms =
+        hasProductFilters && hasTextFilter
+          ? [debouncedQuery, selectedProductQuery]
+          : [hasProductFilters ? selectedProductQuery : debouncedQuery];
+      // The existing RPC accepts one query at a time; intersect results to combine text and tags.
+      const results = await Promise.all(
+        queryTerms.map((p_query) =>
+          supabase.rpc("get_stock_checks", {
+            p_from: dateRange.from || null,
+            p_to: dateRange.to || null,
+            p_query,
+            p_statuses: status === "all" ? [] : [status],
+            p_sort: sort.key,
+            p_direction: sort.direction,
+            p_limit: 5000,
+            p_offset: 0,
+          }),
+        ),
       );
-      if (loadError) throw loadError;
-      const result = data as { rows?: StockCheckRow[]; total?: number } | null;
-      setRows(result?.rows || []);
-      setTotal(Number(result?.total || 0));
+      const resultData = results.map(({ data, error: loadError }) => {
+        if (loadError) throw loadError;
+        return data as { rows?: StockCheckRow[]; total?: number } | null;
+      });
+      let nextRows = resultData[0]?.rows || [];
+      if (hasProductFilters && hasTextFilter) {
+        const productMatches = new Set(
+          (resultData[1]?.rows || []).map((row) => row.id),
+        );
+        nextRows = nextRows.filter((row) => productMatches.has(row.id));
+      }
+      setRows(nextRows);
+      setTotal(
+        hasProductFilters && hasTextFilter
+          ? nextRows.length
+          : Number(resultData[0]?.total || 0),
+      );
       setError("");
     } catch (caught) {
       const message =
@@ -211,6 +297,8 @@ export function StockCheckManagement({
     canList,
     dateRange,
     debouncedQuery,
+    productFilterIds,
+    selectedProductQuery,
     status,
     sort,
     supabase,
@@ -303,9 +391,7 @@ export function StockCheckManagement({
       } catch (caught) {
         if (!active) return;
         setError(
-          caught instanceof Error
-            ? caught.message
-            : "Không tìm được hàng hóa.",
+          caught instanceof Error ? caught.message : "Không tìm được hàng hóa.",
         );
       }
       if (active) setLoadedProductQuery(productQueryDebounced);
@@ -891,15 +977,13 @@ export function StockCheckManagement({
       )}
       {canList ? (
         <div className="stock-check-workspace">
-          <section
-            className="card stock-check-filter"
-            aria-label="Tìm và lọc phiếu kiểm kho"
+          <FilterPanel
+            className="stock-check-filter"
+            ariaLabel="Bộ lọc phiếu kiểm kho"
+            icon={<Boxes size={17} />}
           >
-            <div className="stock-check-filter-heading">
-              Tìm và lọc phiếu kiểm kho
-            </div>
             <div className="stock-check-filter-grid">
-              <label>
+              <label className="filter-group">
                 <span>Ngày tạo phiếu</span>
                 <DateRangeInput
                   start={dateRange.from}
@@ -908,39 +992,75 @@ export function StockCheckManagement({
                   ariaLabel="Lọc phiếu kiểm kho theo ngày"
                 />
               </label>
-              <div className="stock-check-filter-field">
-                <span>Mã phiếu, ghi chú, người tạo hoặc hàng hóa</span>
+              <label className="filter-group stock-check-filter-field">
+                <span>Mã phiếu, ghi chú hoặc người tạo</span>
                 <SearchInputField
                   value={query}
                   onChange={updateQuery}
                   onClear={() => updateQuery("")}
                   placeholder="Nhập từ khóa tìm kiếm"
-                  aria-label="Tìm theo mã phiếu, ghi chú, người tạo hoặc hàng hóa"
+                  aria-label="Tìm theo mã phiếu, ghi chú hoặc người tạo"
                   showSearchIcon={false}
                 />
+              </label>
+              <label className="filter-group stock-check-product-filter">
+                <span>Tìm hàng hóa</span>
+                <AppSelect
+                  ariaLabel="Lọc phiếu theo hàng hóa"
+                  isMulti
+                  isSearchable
+                  options={filterProducts.map((product) => ({
+                    value: product.id,
+                    label: product.sku
+                      ? `${product.sku} · ${product.name}`
+                      : product.name,
+                  }))}
+                  value={productFilterIds}
+                  onChange={(ids) => {
+                    setPage(0);
+                    setProductFilterIds(ids);
+                  }}
+                  onSearchInputChange={setProductFilterQuery}
+                  placeholder="Tìm mã hoặc tên hàng hóa"
+                />
                 <small className="stock-check-filter-hint">
-                  Ngăn cách nhiều hàng hóa bằng dấu phẩy; phiếu phải có đủ tất
-                  cả mặt hàng.
+                  Phiếu phải có đủ tất cả mặt hàng đã chọn.
                 </small>
-              </div>
-              <label>
+                {filterProductsError && (
+                  <small className="stock-check-filter-error" role="alert">
+                    {filterProductsError}
+                  </small>
+                )}
+              </label>
+              <label className="filter-group">
                 <span>Trạng thái</span>
-                <select
-                  className="field"
+                <AppSelect
+                  ariaLabel="Lọc trạng thái phiếu kiểm kho"
                   value={status}
-                  onChange={(event) =>
-                    updateStatus(event.target.value as typeof status)
-                  }
-                  aria-label="Lọc trạng thái phiếu kiểm kho"
-                >
-                  <option value="all">Tất cả</option>
-                  <option value="draft">Lưu tạm</option>
-                  <option value="completed">Đã hoàn thành</option>
-                  <option value="cancelled">Đã hủy</option>
-                </select>
+                  options={[
+                    { value: "all", label: "Tất cả" },
+                    { value: "draft", label: "Lưu tạm" },
+                    { value: "completed", label: "Đã hoàn thành" },
+                    { value: "cancelled", label: "Đã hủy" },
+                  ]}
+                  onChange={(next) => updateStatus(next as typeof status)}
+                />
               </label>
             </div>
-          </section>
+            <AppButton
+              variant="ghost"
+              className="filter-reset"
+              onClick={() => {
+                updateDateRange("", "");
+                updateQuery("");
+                setProductFilterIds([]);
+                setProductFilterQuery("");
+                updateStatus("all");
+              }}
+            >
+              Xóa bộ lọc
+            </AppButton>
+          </FilterPanel>
           <section className="card stock-check-results">
             <MobileTableToolbarMetrics
               metrics={[
@@ -1443,11 +1563,7 @@ export function StockCheckManagement({
               </div>
             )}
             <div className="stock-check-detail-footer">
-              <AppButton
-                variant="secondary"
-                type="button"
-                onClick={printPage}
-              >
+              <AppButton variant="secondary" type="button" onClick={printPage}>
                 <span className="stock-check-detail-footer-label">
                   <Printer size={15} aria-hidden="true" />
                   In phiếu

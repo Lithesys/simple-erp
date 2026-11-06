@@ -6,19 +6,20 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
-import { AppInput } from "@/components/app-input";
 import { AppButton } from "@/components/app-button";
 import { AppSelect } from "@/components/app-select";
 import { DateRangeInput } from "@/components/date-range-input";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { canAccessPage } from "@/lib/access-control";
 import { getUserPermissions } from "@/lib/auth";
-import { addCalendarDays, getReportingDate } from "@/lib/dashboard-metrics";
+import { getReportingDate } from "@/lib/dashboard-metrics";
+import { currentMonthDateRange } from "@/lib/debt-date-range";
 import { formatDate } from "@/lib/date";
 import { formatVnd } from "@/lib/format";
 import {
@@ -33,26 +34,16 @@ type SalesAnalysisAccess = NonNullable<
   Awaited<ReturnType<typeof getUserPermissions>>
 >;
 
-function currentWeekRange(): SalesAnalysisRange {
-  const today = getReportingDate();
-  const weekday = new Date(`${today}T00:00:00.000Z`).getUTCDay();
-  const mondayOffset = (weekday + 6) % 7;
-  const from = addCalendarDays(today, -mondayOffset);
-  return { from, to: today };
-}
-
 const metricOptions: { value: SalesAnalysisMetric; label: string }[] = [
   { value: "time", label: "Thời gian" },
   { value: "profit", label: "Lợi nhuận" },
   { value: "discount", label: "Giảm giá HĐ" },
-  { value: "returns", label: "Trả hàng" },
   { value: "employee", label: "Nhân viên" },
 ];
 
 function metricTitle(metric: SalesAnalysisMetric) {
   if (metric === "profit") return "Lợi nhuận";
   if (metric === "discount") return "Giảm giá hóa đơn";
-  if (metric === "returns") return "Giá trị trả hàng";
   if (metric === "employee") return "Doanh thu theo nhân viên";
   return "Doanh thu thuần";
 }
@@ -76,8 +67,7 @@ export default function SalesAnalysisPage() {
   const [accessError, setAccessError] = useState("");
   const [metric, setMetric] = useState<SalesAnalysisMetric>("time");
   const [view, setView] = useState<"chart" | "report">("chart");
-  const [rangeMode, setRangeMode] = useState<"week" | "custom">("week");
-  const [range, setRange] = useState<SalesAnalysisRange>(currentWeekRange);
+  const [range, setRange] = useState<SalesAnalysisRange>(currentMonthDateRange);
   const [priceListId, setPriceListId] = useState("");
 
   useEffect(() => {
@@ -105,7 +95,9 @@ export default function SalesAnalysisPage() {
   const hasPageAccess = Boolean(
     access && canAccessPage("salesAnalysis", access.permissions),
   );
-  const canViewProfit = Boolean(access?.permissions.includes("products.cost.read"));
+  const canViewProfit = Boolean(
+    access?.permissions.includes("products.cost.read"),
+  );
   const priceListsQuery = useQuery({
     queryKey: ["sales-analysis-price-lists", access?.user.id],
     enabled: Boolean(access?.user.id) && hasPageAccess,
@@ -141,7 +133,12 @@ export default function SalesAnalysisPage() {
   });
 
   const chartRows = chartQuery.data ?? [];
-  const title = `${metricTitle(metric)}${rangeMode === "week" ? " tuần này" : " theo thời gian"}`;
+  const currentMonth = currentMonthDateRange();
+  const today = getReportingDate();
+  const isCurrentMonth =
+    range.from === currentMonth.from &&
+    (range.to === currentMonth.to || range.to === today);
+  const title = `${metricTitle(metric)}${isCurrentMonth ? " tháng này" : " theo thời gian"}`;
 
   if (!accessResolved) return <LoadingSkeleton rows={6} />;
   if (accessError)
@@ -153,7 +150,11 @@ export default function SalesAnalysisPage() {
   if (!access)
     return <div className="alert">Không thể tải quyền tài khoản.</div>;
   if (!hasPageAccess)
-    return <div className="alert">Tài khoản không có quyền xem phân tích bán hàng.</div>;
+    return (
+      <div className="alert">
+        Tài khoản không có quyền xem phân tích bán hàng.
+      </div>
+    );
 
   return (
     <div className="sales-analysis-page">
@@ -163,10 +164,17 @@ export default function SalesAnalysisPage() {
         </div>
       </div>
       <div className="sales-analysis-layout">
-        <aside className="card sales-analysis-filters" aria-label="Bộ lọc báo cáo bán hàng">
+        <aside
+          className="card sales-analysis-filters"
+          aria-label="Bộ lọc báo cáo bán hàng"
+        >
           <div className="sales-analysis-filter-group">
             <span>Kiểu hiển thị</span>
-            <div className="sales-analysis-view-toggle" role="group" aria-label="Kiểu hiển thị">
+            <div
+              className="sales-analysis-view-toggle"
+              role="group"
+              aria-label="Kiểu hiển thị"
+            >
               <AppButton
                 type="button"
                 variant={view === "chart" ? "primary" : "secondary"}
@@ -211,41 +219,16 @@ export default function SalesAnalysisPage() {
               isDisabled={priceListsQuery.isPending}
             />
           </label>
-          <fieldset className="sales-analysis-filter-group">
-            <legend>Thời gian</legend>
-            <label className="sales-analysis-radio">
-              <AppInput
-                type="radio"
-                name="sales-analysis-range"
-                value="week"
-                checked={rangeMode === "week"}
-                onChange={() => {
-                  setRangeMode("week");
-                  setRange(currentWeekRange());
-                }}
-              />
-              <span>Tuần này</span>
-            </label>
-            <label className="sales-analysis-radio">
-              <AppInput
-                type="radio"
-                name="sales-analysis-range"
-                value="custom"
-                checked={rangeMode === "custom"}
-                onChange={() => setRangeMode("custom")}
-              />
-              <span>Tùy chỉnh</span>
-            </label>
-            {rangeMode === "custom" && (
-              <DateRangeInput
-                start={range.from}
-                end={range.to}
-                ariaLabel="Khoảng thời gian báo cáo bán hàng"
-                className="field date-range-field sales-analysis-date-range"
-                onChange={(from, to) => setRange({ from, to })}
-              />
-            )}
-          </fieldset>
+          <label className="sales-analysis-filter-group">
+            <span>Thời gian</span>
+            <DateRangeInput
+              start={range.from}
+              end={range.to}
+              ariaLabel="Khoảng thời gian báo cáo bán hàng"
+              className="field date-range-field sales-analysis-date-range"
+              onChange={(from, to) => setRange({ from, to })}
+            />
+          </label>
           <label className="sales-analysis-filter-group">
             <span>Phương thức bán hàng</span>
             <AppSelect
@@ -289,7 +272,10 @@ export default function SalesAnalysisPage() {
           ) : chartRows.length && view === "chart" ? (
             <div className="sales-analysis-chart">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartRows} margin={{ top: 18, right: 16, bottom: 4, left: 0 }}>
+                <BarChart
+                  data={chartRows}
+                  margin={{ top: 18, right: 16, bottom: 4, left: 0 }}
+                >
                   <CartesianGrid
                     strokeDasharray="3 3"
                     stroke="var(--border-subtle)"
@@ -311,12 +297,38 @@ export default function SalesAnalysisPage() {
                     }}
                     formatter={(value) => formatVnd(Number(value))}
                   />
-                  <Bar
-                    dataKey="amount"
-                    name={metricTitle(metric)}
-                    fill="var(--chart-blue, var(--primary))"
-                    radius={[1, 1, 0, 0]}
-                  />
+                  {metric === "profit" && (
+                    <Legend verticalAlign="bottom" height={24} />
+                  )}
+                  {metric === "profit" ? (
+                    <>
+                      <Bar
+                        dataKey="amount"
+                        name="Lợi nhuận"
+                        fill="var(--chart-blue, #0b71f4)"
+                        radius={[1, 1, 0, 0]}
+                      />
+                      <Bar
+                        dataKey="revenue"
+                        name="Doanh thu"
+                        fill="var(--chart-green, #00b846)"
+                        radius={[1, 1, 0, 0]}
+                      />
+                      <Bar
+                        dataKey="cost"
+                        name="Giá vốn"
+                        fill="var(--chart-yellow, #ffb900)"
+                        radius={[1, 1, 0, 0]}
+                      />
+                    </>
+                  ) : (
+                    <Bar
+                      dataKey="amount"
+                      name={metricTitle(metric)}
+                      fill="var(--chart-blue, var(--primary))"
+                      radius={[1, 1, 0, 0]}
+                    />
+                  )}
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -325,28 +337,105 @@ export default function SalesAnalysisPage() {
               <table className="app-table sales-analysis-report">
                 <thead>
                   <tr>
-                    <th scope="col">{metric === "employee" ? "Nhân viên" : "Ngày"}</th>
-                    <th scope="col" className="sales-analysis-report-amount">
-                      {metricTitle(metric)}
+                    <th scope="col">
+                      {metric === "employee" ? "Nhân viên" : "Ngày"}
                     </th>
+                    {metric === "profit" ? (
+                      <>
+                        <th
+                          scope="col"
+                          className="sales-analysis-report-amount"
+                        >
+                          Lợi nhuận
+                        </th>
+                        <th
+                          scope="col"
+                          className="sales-analysis-report-amount"
+                        >
+                          Doanh thu
+                        </th>
+                        <th
+                          scope="col"
+                          className="sales-analysis-report-amount"
+                        >
+                          Giá vốn
+                        </th>
+                      </>
+                    ) : (
+                      <th scope="col" className="sales-analysis-report-amount">
+                        {metricTitle(metric)}
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
                   {chartRows.map((point, index) => (
                     <tr key={`${point.business_date ?? point.label}-${index}`}>
-                      <td>{point.business_date ? formatDate(point.business_date) : point.label}</td>
-                      <td className="sales-analysis-report-amount">
-                        {formatVnd(point.amount)}
+                      <td>
+                        {point.business_date
+                          ? formatDate(point.business_date)
+                          : point.label}
                       </td>
+                      {metric === "profit" ? (
+                        <>
+                          <td className="sales-analysis-report-amount">
+                            {formatVnd(point.amount)}
+                          </td>
+                          <td className="sales-analysis-report-amount">
+                            {formatVnd(point.revenue ?? 0)}
+                          </td>
+                          <td className="sales-analysis-report-amount">
+                            {formatVnd(point.cost ?? 0)}
+                          </td>
+                        </>
+                      ) : (
+                        <td className="sales-analysis-report-amount">
+                          {formatVnd(point.amount)}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
                   <tr>
                     <th scope="row">Tổng</th>
-                    <th className="sales-analysis-report-amount">
-                      {formatVnd(chartRows.reduce((sum, point) => sum + point.amount, 0))}
-                    </th>
+                    {metric === "profit" ? (
+                      <>
+                        <th className="sales-analysis-report-amount">
+                          {formatVnd(
+                            chartRows.reduce(
+                              (sum, point) => sum + point.amount,
+                              0,
+                            ),
+                          )}
+                        </th>
+                        <th className="sales-analysis-report-amount">
+                          {formatVnd(
+                            chartRows.reduce(
+                              (sum, point) => sum + (point.revenue ?? 0),
+                              0,
+                            ),
+                          )}
+                        </th>
+                        <th className="sales-analysis-report-amount">
+                          {formatVnd(
+                            chartRows.reduce(
+                              (sum, point) => sum + (point.cost ?? 0),
+                              0,
+                            ),
+                          )}
+                        </th>
+                      </>
+                    ) : (
+                      <th className="sales-analysis-report-amount">
+                        {formatVnd(
+                          chartRows.reduce(
+                            (sum, point) => sum + point.amount,
+                            0,
+                          ),
+                        )}
+                      </th>
+                    )}
                   </tr>
                 </tfoot>
               </table>

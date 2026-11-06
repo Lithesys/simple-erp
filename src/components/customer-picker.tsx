@@ -61,6 +61,21 @@ export function CustomerPicker({
   const localInputRef = useRef<HTMLInputElement>(null);
   const resolvedInputRef = inputRef ?? localInputRef;
   const menuRef = useRef<HTMLDivElement>(null);
+  const createCustomerButton =
+    canCreateCustomer && onCreateCustomer ? (
+      <AppButton
+        variant="ghost"
+        type="button"
+        iconOnly
+        className="pos-customer-create"
+        aria-label="Thêm khách hàng"
+        title="Thêm khách hàng"
+        disabled={disabled}
+        onClick={onCreateCustomer}
+      >
+        <Plus size={18} aria-hidden="true" />
+      </AppButton>
+    ) : null;
   useEffect(() => {
     if (!open || !suggestionsEnabled) return;
     let active = true;
@@ -214,28 +229,32 @@ export function CustomerPicker({
           <div className={showInputLabel ? "form-label" : undefined}>
             {showInputLabel && <span>{searchLabel}</span>}
             {value.id && !selecting ? (
-              onEditCustomer ? (
-                <AppButton
-                  variant="ghost"
-                  type="button"
-                  className="pos-customer-selected-value"
-                  disabled={disabled}
-                  aria-label={`Sửa khách hàng ${value.name}`}
-                  onClick={() => onEditCustomer(value)}
-                >
-                  <span>{value.name}</span>
-                  <Pencil size={14} aria-hidden="true" />
-                </AppButton>
-              ) : (
-                <div className="pos-customer-selected-value">
-                  <span>{value.name}</span>
-                </div>
-              )
+              <div className="pos-customer-selected-field">
+                {onEditCustomer ? (
+                  <AppButton
+                    variant="ghost"
+                    type="button"
+                    className="pos-customer-selected-value"
+                    disabled={disabled}
+                    aria-label={`Sửa khách hàng ${value.name}`}
+                    onClick={() => onEditCustomer(value)}
+                  >
+                    <span>{value.name}</span>
+                    <Pencil size={14} aria-hidden="true" />
+                  </AppButton>
+                ) : (
+                  <div className="pos-customer-selected-value">
+                    <span>{value.name}</span>
+                  </div>
+                )}
+                {createCustomerButton}
+              </div>
             ) : (
               <SearchInputField
                 ref={resolvedInputRef}
                 className={showSearchIcon ? "" : "customer-picker-input"}
                 showSearchIcon={showSearchIcon}
+                endAdornment={createCustomerButton}
                 aria-label={searchLabel}
                 role="combobox"
                 aria-keyshortcuts={searchOnly ? undefined : "F4"}
@@ -284,26 +303,14 @@ export function CustomerPicker({
                   }
                   if (event.key === "ArrowUp") {
                     event.preventDefault();
-                    setActiveIndex((activeIndex + rows.length - 1) % rows.length);
+                    setActiveIndex(
+                      (activeIndex + rows.length - 1) % rows.length,
+                    );
                   }
                 }}
               />
             )}
           </div>
-          {canCreateCustomer && onCreateCustomer && (
-            <AppButton
-              variant="ghost"
-              type="button"
-              iconOnly
-              className="pos-customer-create"
-              aria-label="Thêm khách hàng"
-              title="Thêm khách hàng"
-              disabled={disabled}
-              onClick={onCreateCustomer}
-            >
-              <Plus size={18} aria-hidden="true" />
-            </AppButton>
-          )}
           {value.id && !selecting && (
             <AppButton
               variant="ghost"
@@ -451,4 +458,3 @@ export function CustomerPicker({
     </div>
   );
 }
-

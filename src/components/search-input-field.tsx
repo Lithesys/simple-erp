@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef } from "react";
+import type { ReactNode } from "react";
 import { Search, X } from "lucide-react";
 import { AppButton } from "@/components/app-button";
 import { AppInput } from "@/components/app-input";
@@ -11,6 +12,7 @@ type Props = Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange"> & {
   onChange: (value: string) => void;
   onClear?: () => void;
   showSearchIcon?: boolean;
+  endAdornment?: ReactNode;
 };
 
 export const SearchInputField = forwardRef<HTMLInputElement, Props>(
@@ -20,6 +22,7 @@ export const SearchInputField = forwardRef<HTMLInputElement, Props>(
       onChange,
       onClear,
       showSearchIcon = true,
+      endAdornment,
       className = "",
       ...props
     },
@@ -31,7 +34,7 @@ export const SearchInputField = forwardRef<HTMLInputElement, Props>(
     );
 
     return (
-      <label className={classes || undefined}>
+      <div className={classes || undefined}>
         <AppInput
           {...props}
           ref={ref}
@@ -40,6 +43,7 @@ export const SearchInputField = forwardRef<HTMLInputElement, Props>(
           value={value}
           onChange={(event) => onChange(event.target.value)}
         />
+        {endAdornment}
         {onClear && (
           <AppButton
             variant="ghost"
@@ -54,7 +58,7 @@ export const SearchInputField = forwardRef<HTMLInputElement, Props>(
             <X size={15} />
           </AppButton>
         )}
-      </label>
+      </div>
     );
   },
 );
