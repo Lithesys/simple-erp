@@ -557,8 +557,7 @@ export function StockCheckManagement({
         lines.some(
           (line) =>
             line.actual.trim() === "" ||
-            !Number.isFinite(Number(line.actual)) ||
-            Number(line.actual) < 0,
+            !Number.isFinite(Number(line.actual)),
         ))
     ) {
       setError(
@@ -1301,7 +1300,6 @@ export function StockCheckManagement({
                         <td>
                           <AppInput
                             type="number"
-                            min="0"
                             step="0.001"
                             inputMode="decimal"
                             aria-label={`Số lượng thực tế ${line.product.name}`}

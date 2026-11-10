@@ -102,5 +102,5 @@ Chạy `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`. Kiểm 
 - Mọi nút, ô input và bảng HTML trong màn hình dùng component chung `AppButton`, `AppInput`, `AppTable`; field nghiệp vụ mở rộng từ các primitive này.
 - Input tìm kiếm đặt icon bên trong trường nhập; danh sách gợi ý hỗ trợ mũi tên lên/xuống, Enter để chọn và Escape để đóng/xóa.
 - Bảng danh sách có sort hai chiều theo header và menu `Cột` để chọn cột hiển thị. Sort và tổng của tập dữ liệu phân trang lấy từ API.
-- Trường số tự chọn giá trị khi focus và hiển thị dấu phẩy phân nhóm hàng nghìn. Tồn kho trong form sản phẩm chấp nhận 0 và không chấp nhận số âm.
+- Trường số tự chọn giá trị khi focus và hiển thị dấu phẩy phân nhóm hàng nghìn. Tồn kho trong form sản phẩm chấp nhận cả số âm; giá vốn và giá bán không âm.
 - Topbar giữ đường dẫn nhanh `Bán hàng` và `Quản lý`; primary navigation chỉ xuất hiện trong khu vực quản lý.

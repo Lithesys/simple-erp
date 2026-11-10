@@ -1173,7 +1173,7 @@ export function PurchaseManagement({
       title: "Hủy phiếu nhập hàng?",
       message:
         order.status === "received"
-          ? `Hủy ${order.purchase_no} sẽ trừ các mặt hàng đã nhập khỏi tồn kho. Phiếu chỉ được hủy nếu số tồn hiện tại đủ để trừ; phiếu vẫn được lưu trong lịch sử. `
+          ? `Hủy ${order.purchase_no} sẽ trừ các mặt hàng đã nhập khỏi tồn kho; số tồn có thể xuống dưới 0. Phiếu vẫn được lưu trong lịch sử. `
           : `Phiếu ${order.purchase_no} sẽ được chuyển vào lịch sử đã hủy.`,
       confirmLabel: "Hủy phiếu nhập",
     });
@@ -1949,7 +1949,7 @@ export function PurchaseManagement({
             <div className="muted" style={{ fontSize: 12, marginTop: 9 }}>
               {editingOrderId
                 ? selectedOrder?.status === "received"
-                  ? "Đơn đã nhập: thay đổi số lượng sẽ cập nhật tồn kho ngay khi lưu. Không thể làm tồn kho âm."
+                  ? "Đơn đã nhập: thay đổi số lượng sẽ cập nhật tồn kho ngay khi lưu; số tồn có thể xuống dưới 0."
                   : "Đơn đang đợi duyệt: chưa làm thay đổi tồn kho."
                 : "Đơn mới ở trạng thái đợi duyệt và chưa làm thay đổi tồn kho."}
             </div>

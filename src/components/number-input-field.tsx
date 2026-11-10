@@ -17,6 +17,7 @@ type Props = {
   onKeyDown?: React.KeyboardEventHandler<HTMLInputElement>;
   selectOnClick?: boolean;
   disabled?: boolean;
+  allowNegative?: boolean;
 };
 
 const formatter = new Intl.NumberFormat("en-US", {
@@ -64,6 +65,7 @@ export function NumberInputField({
   onKeyDown,
   selectOnClick = true,
   disabled = false,
+  allowNegative = false,
 }: Props) {
   const [isFocused, setIsFocused] = useState(false);
   const [draft, setDraft] = useState(() => String(value));
@@ -92,7 +94,7 @@ export function NumberInputField({
         }
         const parsed = Number(raw);
         if (!Number.isFinite(parsed)) return;
-        const next = Math.max(min, parsed);
+        const next = allowNegative ? parsed : Math.max(min, parsed);
         if (next !== parsed) setDraft(String(next));
         onChange(String(next));
       }}
@@ -105,7 +107,9 @@ export function NumberInputField({
         const next =
           draft === "" || draft === "-" || !Number.isFinite(parsed)
             ? min
-            : Math.max(min, parsed);
+            : allowNegative
+              ? parsed
+              : Math.max(min, parsed);
         const normalized = String(next);
         setIsFocused(false);
         setDraft(normalized);

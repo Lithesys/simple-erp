@@ -3119,6 +3119,7 @@ export function ProductManagement({
                       render={({ field }) => (
                         <NumberInputField
                           step={DECIMAL_INPUT_STEP}
+                          allowNegative
                           value={field.value}
                           disabled={Boolean(draft.id) && !canAdjustStock}
                           onChange={field.onChange}

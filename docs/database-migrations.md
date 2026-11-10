@@ -79,3 +79,7 @@ The migration [20261023080531_purchase_create_cost_permission.sql](../supabase/m
 ## Reading inactive products
 
 The migration [20261023025527_products_read_inactive_products.sql](../migrations/20261023025527_products_read_inactive_products.sql) lets `products.read` users view inactive products while preserving the separate `products.archive` requirement for archiving and reactivation. The rollback [20261023025527_products_read_inactive_products.sql](../rollbacks/20261023025527_products_read_inactive_products.sql) restores the previous RLS policy. The regression test [products_read_inactive.sql](../tests/products_read_inactive.sql) verifies read access, status-filter results, and denied reactivation without the lifecycle permission.
+
+## Negative inventory adjustments
+
+The migration [20261110000000_allow_negative_inventory_adjustments.sql](../supabase/migrations/20261110000000_allow_negative_inventory_adjustments.sql) allows negative actual counts in stock-check documents, including direct product stock edits recorded by the inventory trigger. It also allows edits to received purchase orders to reduce stock below zero. Product stock already has no nonnegative database constraint; sales and received-purchase cancellation already allow negative balances. The migration does not rewrite existing stock balances.
