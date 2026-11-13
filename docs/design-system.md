@@ -24,7 +24,8 @@ Màu trạng thái bổ sung gồm `--success`, `--warning`, `--danger` và nề
 
 Roboto được nạp một lần bằng `next/font/google` trong root layout, có subset Latin và tiếng Việt, `display: swap`, rồi phục vụ từ ứng dụng. Build cần truy cập Google Fonts để tải font. Font fallback là Helvetica, Arial, sans-serif. Dự án tiếp tục dùng Lucide; không cần Font Awesome Pro hay font Inter của widget hỗ trợ.
 
-- Chữ: `--font-size-sm` 13px, `--font-size-base` 14px, `--font-size-md` 16px, `--font-size-lg` 18px; line-height 1.4.
+- Chữ: `--font-size-sm` 12px, `--font-size-base` 12px, `--font-size-md` 16px, `--font-size-lg` 18px; line-height 1.4.
+- Form: nhãn cách field 4px (`--form-label-gap`); giữa các nhóm field dùng 6px (`--form-field-gap`).
 - Độ đậm: `--weight-regular` 400, `--weight-medium` 500, `--weight-bold` 700.
 - Khoảng cách: `--space-1` đến `--space-6`: 4, 8, 12, 16, 20, 24px.
 - Bo góc: input 5px, button 8px, lớn 10px, panel phụ 12px, tròn 999px.

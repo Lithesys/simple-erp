@@ -86,7 +86,7 @@
   .product-filters {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px 14px;
+    gap: var(--form-field-gap) 14px;
     padding: 12px;
   }
   .filter-panel-title {

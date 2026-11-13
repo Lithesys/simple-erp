@@ -201,7 +201,7 @@
 .pos-customer-contact-fields {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: var(--form-field-gap);
   padding-top: 8px;
 }
 .pos-summary {
@@ -307,7 +307,7 @@
 .modal-form {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 13px;
+  gap: var(--form-field-gap);
 }
 .modal-form .span-2 {
   grid-column: span 2;

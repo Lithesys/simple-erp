@@ -422,7 +422,7 @@ export function RoleManagement() {
                 <AppInput className="field" {...register("description")} />
               </label>
               <div className="span-2">
-                <div className="form-label" style={{ marginBottom: 9 }}>
+                <div className="form-label">
                   Quyền theo nhóm chức năng
                 </div>
                 <div className="permission-categories">

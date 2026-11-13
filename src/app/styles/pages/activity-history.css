@@ -7,13 +7,13 @@
 
 .activity-history-filters {
   display: grid;
-  gap: 12px;
+  gap: var(--form-field-gap);
   padding: 12px !important;
 }
 
 .activity-history-filters .form-label {
   display: grid;
-  gap: 7px;
+  gap: var(--form-label-gap);
   min-width: 0;
   margin: 0;
 }

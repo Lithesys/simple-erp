@@ -33,13 +33,13 @@
 .stock-check-filter-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 14px;
+  gap: var(--form-field-gap);
 }
 .stock-check-filter-grid > label,
 .stock-check-product-search,
 .stock-check-note {
   display: grid;
-  gap: 8px;
+  gap: var(--form-label-gap);
   min-width: 0;
 }
 .stock-check-filter-grid > label > span,
@@ -153,6 +153,9 @@
   flex-direction: column;
   gap: 14px;
   overflow: hidden;
+}
+.stock-check-form {
+  gap: var(--form-field-gap);
 }
 .stock-check-form .modal-title,
 .stock-check-detail .modal-title {

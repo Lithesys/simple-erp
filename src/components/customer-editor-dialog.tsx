@@ -44,7 +44,7 @@ export function CustomerEditorDialog({
         )}
       >
         <h2>{customer.id ? "Sửa khách hàng" : "Thêm khách hàng"}</h2>
-        <div style={{ display: "grid", gap: 13 }}>
+        <div style={{ display: "grid", gap: "var(--form-field-gap)" }}>
           <label className="form-label">
             Tên khách hàng
             <AppInput

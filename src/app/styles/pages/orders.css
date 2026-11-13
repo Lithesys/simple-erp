@@ -42,6 +42,7 @@
 }
 .modal.order-detail-modal.order-detail-modal--editing {
   width: min(960px, calc(100vw - 32px));
+  gap: var(--form-field-gap);
 }
 .order-detail-modal .modal-title {
   margin-bottom: 0;
@@ -64,10 +65,10 @@
   margin-top: 4px;
 }
 .order-edit-product-picker {
-  margin: 8px 0 2px;
+  margin: 0;
 }
 .order-edit-price-list {
-  margin: 8px 0 2px;
+  margin: 0;
 }
 .order-edit-product-options {
   max-height: 240px;
@@ -249,7 +250,7 @@
 }
 .orders-workspace .product-filters {
   display: grid;
-  gap: 12px;
+  gap: var(--form-field-gap);
 }
 .orders-filter {
   position: relative;
@@ -259,7 +260,7 @@
 }
 .orders-filter-date {
   display: grid;
-  gap: 7px;
+  gap: var(--form-label-gap);
 }
 .orders-filter-date > span {
   color: var(--text-secondary);
@@ -269,12 +270,12 @@
 .orders-filter-time {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: var(--form-field-gap);
 }
 .orders-filter-time label {
   display: grid;
   min-width: 0;
-  gap: 5px;
+  gap: var(--form-label-gap);
   color: var(--text-secondary);
   font-size: var(--font-size-sm);
 }
@@ -323,7 +324,7 @@
   display: grid;
   width: min(400px, calc(100vw - 32px));
   max-height: calc(100vh - 150px);
-  gap: 9px;
+  gap: var(--form-field-gap);
   overflow: visible;
   padding: 12px;
   border: 1px solid var(--border);
@@ -335,7 +336,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
-  gap: 9px;
+  gap: var(--form-field-gap);
 }
 .orders-filter-grid .form-label {
   min-width: 0;
@@ -343,7 +344,6 @@
 }
 .orders-filter-grid .field {
   width: 100%;
-  margin-top: 7px;
 }
 .orders-filter-grid .form-label.orders-product-filter .field[role="combobox"] {
   background: var(--surface);
@@ -357,7 +357,7 @@
   box-sizing: border-box;
   width: 100%;
   min-height: var(--control-height-compact);
-  margin-top: 7px;
+  margin-top: 0;
   border-radius: var(--radius-button);
 }
 .orders-filter-grid .pos-customer-picker .search-input-field .field {
@@ -368,7 +368,7 @@
 .orders-product-filter {
   position: relative;
   display: grid;
-  gap: 7px;
+  gap: var(--form-label-gap);
 }
 .orders-product-filter .field {
   margin-top: 0;
@@ -481,8 +481,8 @@
   font-size: var(--font-size-sm);
 }
 .orders-filter-statuses input {
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
   margin: 0;
   accent-color: var(--primary);
 }

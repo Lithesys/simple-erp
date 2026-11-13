@@ -225,7 +225,7 @@ tr:last-child td {
   padding: 0 9px;
   outline: none;
   color: var(--text-primary);
-  font-size: 12px;
+  font-size: var(--font-size-base);
   transition:
     border-color 120ms ease,
     box-shadow 120ms ease,
@@ -360,15 +360,20 @@ textarea.field {
 }
 .auth-form {
   display: grid;
-  gap: 15px;
+  gap: var(--form-field-gap);
   margin-top: 25px;
 }
 .form-label {
   display: grid;
-  gap: 6px;
+  gap: var(--form-label-gap);
+  margin: 0;
+  padding: 0;
   color: var(--text-secondary);
   font-size: var(--font-size-sm);
   font-weight: var(--weight-medium);
+}
+.form-label > * {
+  margin-block: 0;
 }
 .alert {
   border-radius: 9px;

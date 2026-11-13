@@ -128,7 +128,7 @@ body {
 }
 .debt-filter-panel {
   display: grid;
-  gap: 12px;
+  gap: var(--form-field-gap);
   overflow: visible;
 }
 .debt-filter-panel .form-label {
@@ -207,7 +207,7 @@ body {
 .debt-edit-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 13px;
+  gap: var(--form-field-gap);
 }
 .permission-categories {
   display: grid;
@@ -231,7 +231,7 @@ body {
 .order-edit-fields {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: var(--form-field-gap);
   margin: 12px 0;
 }
 .order-edit-fields .form-label:last-child {

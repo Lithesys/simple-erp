@@ -247,6 +247,8 @@
   padding-left: 24px;
 }
 .app-choice-input {
+  width: 14px;
+  height: 14px;
   accent-color: var(--primary);
   cursor: pointer;
 }
