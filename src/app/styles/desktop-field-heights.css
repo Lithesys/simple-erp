@@ -17,6 +17,22 @@
     max-height: 32px;
   }
 
+  /* Keep react-select content centered inside the compact 32px control. The
+     shared input-height rule also matches react-select's visually hidden
+     combobox input, which otherwise expands these inner rows to 36px. */
+  .app-select__value-container,
+  .app-select__indicators {
+    box-sizing: border-box;
+    height: 30px !important;
+    min-height: 30px !important;
+  }
+
+  .app-select input {
+    height: 1px !important;
+    min-height: 1px !important;
+    max-height: 1px !important;
+  }
+
   .daterangepicker select.monthselect,
   .daterangepicker select.yearselect {
     height: 30px;
@@ -81,11 +97,16 @@
 
   .pos-customer-selected-group .pos-customer-create,
   .pos-customer-search-row .pos-customer-selected-group .pos-customer-clear {
-    width: 26px;
-    min-width: 26px;
-    height: 26px;
-    min-height: 26px;
-    max-height: 26px;
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
     padding: 0;
+  }
+
+  .pos-customer-search-row .pos-customer-selected-group .pos-customer-clear > svg {
+    width: 18px;
+    height: 18px;
   }
 }

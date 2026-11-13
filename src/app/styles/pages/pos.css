@@ -193,6 +193,9 @@
   flex: none;
   align-self: center;
 }
+.pos-customer-search-row .pos-customer-selected-group .pos-customer-clear {
+  align-self: center;
+}
 .pos-customer-change {
   min-width: 38px;
   align-self: end;
