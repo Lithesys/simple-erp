@@ -266,12 +266,8 @@ export function DateRangeInput({
       readOnly
       placeholder={placeholder}
       aria-label={ariaLabel}
+      onFocus={openDatePicker}
       onClick={openDatePicker}
-      onPointerDown={(event) => {
-        if (event.pointerType === "mouse") return;
-        openDatePicker();
-      }}
-      onTouchStart={openDatePicker}
     />
   );
 }
