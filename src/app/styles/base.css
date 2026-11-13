@@ -189,6 +189,13 @@ button {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
+.customer-editor-dialog__title {
+  margin: 0 0 5px;
+  color: var(--text-primary);
+  font-size: 22px;
+  font-weight: var(--weight-bold);
+  line-height: 1.2;
+}
 .table-wrap {
   overflow: auto;
 }

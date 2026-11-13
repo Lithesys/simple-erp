@@ -2,7 +2,6 @@
 
 import { AppButton } from "@/components/app-button";
 import { AppInput } from "@/components/app-input";
-import { AppTextarea } from "@/components/app-textarea";
 import { ModalLayer } from "@/components/modal-layer";
 import type { Customer } from "@/lib/customers";
 import { useForm } from "react-hook-form";
@@ -35,7 +34,7 @@ export function CustomerEditorDialog({
   return (
     <ModalLayer className="modal-backdrop" onEscape={onClose}>
       <form
-        className="modal card"
+        className="modal card customer-editor-dialog"
         role="dialog"
         aria-modal="true"
         aria-label={customer.id ? "Sửa khách hàng" : "Thêm khách hàng"}
@@ -43,7 +42,9 @@ export function CustomerEditorDialog({
           onSave({ ...values, id: customer.id }),
         )}
       >
-        <h2>{customer.id ? "Sửa khách hàng" : "Thêm khách hàng"}</h2>
+        <h2 className="customer-editor-dialog__title">
+          {customer.id ? "Sửa khách hàng" : "Thêm khách hàng"}
+        </h2>
         <div style={{ display: "grid", gap: "var(--form-field-gap)" }}>
           <label className="form-label">
             Tên khách hàng
@@ -66,9 +67,9 @@ export function CustomerEditorDialog({
           </label>
           <label className="form-label">
             Địa chỉ
-            <AppTextarea
+            <AppInput
+              className="field"
               maxLength={1000}
-              rows={4}
               {...register("address", { maxLength: 1000 })}
             />
           </label>
