@@ -202,6 +202,12 @@ export function CustomerPicker({
     setSelecting(false);
     setOpen(false);
   }
+  function clearSelectedCustomer() {
+    onChange({ id: "", name: "", phone: "", address: "" });
+    setSelecting(true);
+    setOpen(true);
+    requestAnimationFrame(() => resolvedInputRef.current?.focus());
+  }
   return (
     <div
       className="pos-customer-picker"
@@ -229,7 +235,13 @@ export function CustomerPicker({
           <div className={showInputLabel ? "form-label" : undefined}>
             {showInputLabel && <span>{searchLabel}</span>}
             {value.id && !selecting ? (
-              <div className="pos-customer-selected-field">
+              <div
+                className={
+                  compact
+                    ? "pos-customer-selected-field pos-customer-selected-group"
+                    : "pos-customer-selected-field"
+                }
+              >
                 {onEditCustomer ? (
                   <AppButton
                     variant="ghost"
@@ -247,6 +259,20 @@ export function CustomerPicker({
                   </div>
                 )}
                 {createCustomerButton}
+                {compact && (
+                  <AppButton
+                    variant="ghost"
+                    type="button"
+                    className="pos-customer-change pos-customer-clear"
+                    iconOnly
+                    aria-label="Xóa khách hàng đã chọn"
+                    title="Xóa khách hàng"
+                    disabled={disabled}
+                    onClick={clearSelectedCustomer}
+                  >
+                    <X size={16} aria-hidden="true" />
+                  </AppButton>
+                )}
               </div>
             ) : (
               <SearchInputField
@@ -310,27 +336,16 @@ export function CustomerPicker({
               />
             )}
           </div>
-          {value.id && !selecting && (
+          {value.id && !selecting && !compact && (
             <AppButton
               variant="ghost"
               type="button"
-              className={
-                compact
-                  ? "pos-customer-change pos-customer-clear"
-                  : "pos-customer-change"
-              }
-              iconOnly={compact}
-              aria-label={compact ? "Xóa khách hàng đã chọn" : "Đổi khách hàng"}
-              title={compact ? "Xóa khách hàng" : undefined}
+              className="pos-customer-change"
+              aria-label="Đổi khách hàng"
               disabled={disabled}
-              onClick={() => {
-                onChange({ id: "", name: "", phone: "", address: "" });
-                setSelecting(true);
-                setOpen(true);
-                requestAnimationFrame(() => resolvedInputRef.current?.focus());
-              }}
+              onClick={clearSelectedCustomer}
             >
-              {compact ? <X size={16} aria-hidden="true" /> : "Đổi"}
+              Đổi
             </AppButton>
           )}
         </div>

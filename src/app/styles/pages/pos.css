@@ -167,6 +167,32 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.pos-customer-selected-group {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  background: var(--surface);
+}
+.pos-panel .pos-customer-selected-group .pos-customer-selected-value {
+  flex: 1 1 auto;
+  width: auto;
+  border-color: transparent;
+  background: transparent;
+}
+.pos-customer-selected-group .pos-customer-create {
+  position: static;
+  top: auto;
+  right: auto;
+  transform: none;
+}
+.pos-customer-selected-group .pos-customer-clear {
+  flex: none;
+  align-self: center;
+}
 .pos-customer-change {
   min-width: 38px;
   align-self: end;

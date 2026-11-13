@@ -15,6 +15,36 @@
     padding: 12px 10px;
   }
 
+  .pos-customer-selected-group {
+    display: block;
+    margin-right: 50px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .pos-panel .pos-customer-selected-group .pos-customer-selected-value {
+    flex: none;
+    width: 100%;
+    padding: 0 52px 0 11px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .pos-customer-selected-group .pos-customer-create {
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    transform: translateY(-50%);
+  }
+
+  .pos-customer-search-row .pos-customer-selected-group .pos-customer-clear {
+    position: absolute;
+    top: 0;
+    right: -50px;
+    align-self: end;
+  }
+
   .pos-shell .field:not(.inline-edit-field) {
     min-height: var(--control-height-touch);
     border-radius: var(--radius-panel-subtle);

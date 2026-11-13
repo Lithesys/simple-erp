@@ -31,6 +31,7 @@ import "./styles/mobile-card-states.css";
 import "react-toastify/dist/ReactToastify.css";
 import "daterangepicker/daterangepicker.css";
 import "react-loading-skeleton/dist/skeleton.css";
+import "./styles/desktop-field-heights.css";
 import { ToastContainer } from "react-toastify";
 import { AppProviders } from "@/components/app-providers";
 

@@ -1,0 +1,91 @@
+/* Desktop controls use a compact, consistent height. Mobile touch sizing stays
+   in the existing responsive stylesheets below 721px. */
+@media (min-width: 721px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not(
+      [type="hidden"]
+    ):not([type="button"]):not([type="submit"]):not([type="reset"]):not(
+      [type="image"]
+    ):not([type="color"]),
+  select:not([multiple]),
+  .field:not(textarea),
+  .app-select__control,
+  .app-select-control,
+  .desktop-field select.field {
+    box-sizing: border-box;
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
+  }
+
+  .daterangepicker select.monthselect,
+  .daterangepicker select.yearselect {
+    height: 30px;
+    min-height: 30px;
+    max-height: 30px;
+  }
+
+  .search-input-field:has(> .app-input-shell),
+  .plain-input-field {
+    box-sizing: border-box;
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
+  }
+
+  .pos-left > .pos-search-field {
+    flex: 0 0 32px;
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
+  }
+
+  .orders-filter-grid .pos-customer-picker .search-input-field {
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
+  }
+
+  .search-input-field
+    > .app-input-shell
+    > input.field:not([type="checkbox"]):not([type="radio"]):not(
+      [type="range"]
+    ):not([type="hidden"]):not([type="button"]):not([type="submit"]):not(
+      [type="reset"]
+    ):not([type="image"]):not([type="color"]),
+  .pos-panel .pos-customer-selected-group .pos-customer-selected-value,
+  .pos-customer-selected-group .pos-customer-create,
+  .pos-customer-search-row .pos-customer-selected-group .pos-customer-clear {
+    height: 30px;
+    min-height: 30px;
+    max-height: 30px;
+  }
+
+  .pos-left
+    > .pos-search-field
+    > .app-input-shell
+    > input.field:not([type="checkbox"]):not([type="radio"]):not(
+      [type="range"]
+    ):not([type="hidden"]):not([type="button"]):not([type="submit"]):not(
+      [type="reset"]
+    ):not([type="image"]):not([type="color"]) {
+    height: 30px;
+    min-height: 30px;
+    max-height: 30px;
+  }
+
+  .pos-customer-selected-group {
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
+  }
+
+  .pos-customer-selected-group .pos-customer-create,
+  .pos-customer-search-row .pos-customer-selected-group .pos-customer-clear {
+    width: 26px;
+    min-width: 26px;
+    height: 26px;
+    min-height: 26px;
+    max-height: 26px;
+    padding: 0;
+  }
+}
