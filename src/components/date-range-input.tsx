@@ -1,6 +1,7 @@
 "use client";
 
 import { AppInput } from "@/components/app-input";
+import { selectAvailableDateCell } from "@/lib/date-range-calendar";
 
 import { useEffect, useRef, useState } from "react";
 import { todayLocal } from "@/lib/format";
@@ -37,7 +38,7 @@ type JQueryPluginInput = {
     events: string,
     callback: (event: unknown, picker: DateRangePickerInstance) => void,
   ) => void;
-  off: (events: string) => void;
+  off: (events: string, selector?: string) => void;
   data: (key: string) => DateRangePickerInstance | undefined;
 };
 
@@ -80,8 +81,7 @@ export function DateRangeInput({
     let wrapped: JQueryPluginInput | null = null;
     let alignPickerArrow: (() => void) | null = null;
     let handleResize: (() => void) | null = null;
-    let handleCalendarPointerDown: ((event: PointerEvent) => void) | null = null;
-    let handleCalendarTouchStart: ((event: TouchEvent) => void) | null = null;
+    let handleCalendarClick: ((event: MouseEvent) => void) | null = null;
 
     async function attachPicker() {
       const [{ default: jquery }, { default: moment }] = await Promise.all([
@@ -153,40 +153,24 @@ export function DateRangeInput({
       });
       const picker = wrapped.data("daterangepicker");
       const calendarElement = picker?.container?.[0];
-      if (picker?.clickDate && calendarElement) {
-        let lastPointerDateSelection = 0;
-        const selectDateCell = (
-          target: EventTarget | null,
-          stopPropagation: () => void,
-        ) => {
-          const dateCell =
-            target instanceof Element ? target.closest("td.available") : null;
-          if (!dateCell || !calendarElement.contains(dateCell)) return false;
-          picker.clickDate?.({ target: dateCell, stopPropagation });
-          return true;
+      if (picker?.clickDate && calendarElement && jqueryRef.current) {
+        calendarElement
+          .querySelectorAll<HTMLElement>(".drp-calendar")
+          .forEach((calendar) => {
+            jqueryRef.current?.(calendar).off(
+              "mousedown.daterangepicker",
+              "td.available",
+            );
+          });
+        handleCalendarClick = (event) => {
+          selectAvailableDateCell(
+            event.target,
+            calendarElement,
+            (dateEvent) => picker.clickDate?.(dateEvent),
+            () => event.stopPropagation(),
+          );
         };
-        handleCalendarPointerDown = (event) => {
-          if (event.pointerType === "mouse") return;
-          if (!selectDateCell(event.target, () => event.stopPropagation()))
-            return;
-          lastPointerDateSelection = Date.now();
-          event.preventDefault();
-        };
-        handleCalendarTouchStart = (event) => {
-          if (Date.now() - lastPointerDateSelection < 500) return;
-          if (!selectDateCell(event.target, () => event.stopPropagation()))
-            return;
-          event.preventDefault();
-        };
-        calendarElement.addEventListener(
-          "pointerdown",
-          handleCalendarPointerDown,
-        );
-        calendarElement.addEventListener(
-          "touchstart",
-          handleCalendarTouchStart,
-          { passive: false },
-        );
+        calendarElement.addEventListener("click", handleCalendarClick);
       }
       alignPickerArrow = () => {
         const input = inputRef.current;
@@ -247,17 +231,8 @@ export function DateRangeInput({
       wrapped?.off("show.daterangepicker");
       if (handleResize) window.removeEventListener("resize", handleResize);
       const calendarElement = wrapped?.data("daterangepicker")?.container?.[0];
-      if (handleCalendarPointerDown && calendarElement) {
-        calendarElement.removeEventListener(
-          "pointerdown",
-          handleCalendarPointerDown,
-        );
-      }
-      if (handleCalendarTouchStart && calendarElement) {
-        calendarElement.removeEventListener(
-          "touchstart",
-          handleCalendarTouchStart,
-        );
+      if (handleCalendarClick && calendarElement) {
+        calendarElement.removeEventListener("click", handleCalendarClick);
       }
       wrapped?.data("daterangepicker")?.remove?.();
       jqueryRef.current = null;
