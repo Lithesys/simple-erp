@@ -57,6 +57,7 @@ const expectedPageRules: Record<PageAccessKey, PermissionPolicy> = {
     ],
   },
   priceLists: { allOf: ["price_lists.manage"] },
+  printTemplates: { allOf: ["print_templates.read"] },
   accounts: { allOf: ["accounts.manage"] },
   roles: { allOf: ["roles.manage"] },
   activityHistory: { allOf: ["activity_history.read"] },
@@ -128,6 +129,9 @@ const expectedActionRules: Record<ActionAccessKey, PermissionPolicy> = {
   "stockChecks.complete": { allOf: ["stock_checks.complete"] },
   "stockChecks.saveDraft": { allOf: ["stock_checks.create"] },
   "stockChecks.export": { allOf: ["stock_checks.export"] },
+  "printTemplates.create": { allOf: ["print_templates.create"] },
+  "printTemplates.update": { allOf: ["print_templates.update"] },
+  "printTemplates.delete": { allOf: ["print_templates.delete"] },
 };
 
 function matchesPolicy(
@@ -202,6 +206,9 @@ describe("protected page permission rules", () => {
     expect(getLandingPath(["debts.read"])).toBe("/debt");
     expect(getLandingPath(["price_lists.manage"])).toBe(
       "/management/price-lists",
+    );
+    expect(getLandingPath(["print_templates.read"])).toBe(
+      "/system/print-templates",
     );
     expect(getLandingPath(["accounts.manage"])).toBe("/management/accounts");
     expect(getLandingPath(["roles.manage"])).toBe("/management/roles");
