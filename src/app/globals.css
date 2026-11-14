@@ -1,5 +1,4 @@
 @import "tailwindcss";
 @import "./tokens.css";
-@import "@uiw/react-md-editor/markdown-editor.css";
 @import "@uiw/react-markdown-preview/markdown.css";
 @import "./styles/pages/print-templates.css";
