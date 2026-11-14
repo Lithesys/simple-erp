@@ -1,17 +1,23 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import MarkdownPreview from "@uiw/react-markdown-preview";
 import rehypeSanitize from "rehype-sanitize";
-import { FileText, Plus, Printer, Star, Trash2, X } from "lucide-react";
+import { FileText, Plus, Printer, Search, Star, Trash2, X } from "lucide-react";
 import {
   useCallback,
+  useEffect,
   useMemo,
+  useRef,
   useState,
   type CSSProperties,
   type FormEvent,
+  type KeyboardEvent,
+  type SyntheticEvent,
 } from "react";
 import { toast } from "react-toastify";
 import { useQueryClient } from "@tanstack/react-query";
+import type { MDEditorProps } from "@uiw/react-md-editor";
 import { AppButton } from "@/components/app-button";
 import { AppInput } from "@/components/app-input";
 import {
@@ -21,21 +27,34 @@ import {
 import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { ModalLayer } from "@/components/modal-layer";
 import { ReceiptPrint } from "@/components/receipt-print";
-import { PrintTemplateMarkdownEditor } from "@/components/print-template-markdown-editor";
 import { useStoreBrand } from "@/components/store-brand-provider";
 import { createClient } from "@/lib/data/client";
 import {
   DEFAULT_PRINT_TEMPLATE,
   DEFAULT_PRINT_TEMPLATE_CONTENT,
+  PRINT_TEMPLATE_FIELDS,
   PRINT_TEMPLATE_PREVIEW_DATA,
   renderPrintTemplate,
   type PrintTemplate,
+  type PrintTemplateField,
 } from "@/lib/print-template";
 import {
   PRINT_TEMPLATES_QUERY_KEY,
   usePrintTemplates,
 } from "@/lib/use-print-templates";
 import { printPage } from "@/lib/print-page";
+
+const MarkdownEditor = dynamic<MDEditorProps>(
+  () => import("@uiw/react-md-editor").then((module) => module.default),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="print-template-editor-loading">
+        Đang mở trình soạn thảo…
+      </div>
+    ),
+  },
+);
 
 type TemplateDraft = PrintTemplate & { id: string };
 
@@ -51,6 +70,21 @@ function newTemplateDraft(): TemplateDraft {
 
 function paperName(width: number) {
   return width === 210 ? "A4" : `${width} mm`;
+}
+
+function groupedFields(search: string) {
+  const filtered = PRINT_TEMPLATE_FIELDS.filter((field) =>
+    `${field.label} ${field.token} ${field.group}`
+      .toLocaleLowerCase("vi")
+      .includes(search.trim().toLocaleLowerCase("vi")),
+  );
+  return filtered.reduce<Record<string, PrintTemplateField[]>>(
+    (groups, field) => {
+      (groups[field.group] ??= []).push(field);
+      return groups;
+    },
+    {},
+  );
 }
 
 export function PrintTemplateManagement({
@@ -75,22 +109,35 @@ export function PrintTemplateManagement({
   );
   const [templateToDelete, setTemplateToDelete] =
     useState<PrintTemplate | null>(null);
+  const [fieldMenuOpen, setFieldMenuOpen] = useState(false);
+  const [fieldSearch, setFieldSearch] = useState("");
+  const slashIndexRef = useRef<number | null>(null);
+  const cursorIndexRef = useRef(0);
+  const fieldSearchRef = useRef<HTMLInputElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (fieldMenuOpen) fieldSearchRef.current?.focus();
+  }, [fieldMenuOpen]);
 
   const openTemplate = useCallback((template: PrintTemplate) => {
     setDraft({ ...template });
     setSourceWasDefault(template.is_default);
     setFormError("");
+    setFieldMenuOpen(false);
   }, []);
 
   function openCreate() {
     setDraft(newTemplateDraft());
     setSourceWasDefault(false);
     setFormError("");
+    setFieldMenuOpen(false);
   }
 
   function closeEditor() {
     if (busy) return;
     setDraft(null);
+    setFieldMenuOpen(false);
     setFormError("");
   }
 
@@ -103,6 +150,55 @@ export function PrintTemplateManagement({
 
   const isNewDraft = draft?.id === "";
   const canEditContent = canUpdate || (isNewDraft && canCreate);
+
+  function trackEditorCursor(event: SyntheticEvent<HTMLTextAreaElement>) {
+    cursorIndexRef.current = event.currentTarget.selectionStart;
+  }
+
+  function handleEditorKeyUp(event: KeyboardEvent<HTMLTextAreaElement>) {
+    trackEditorCursor(event);
+    if (event.key === "/" && canEditContent) {
+      slashIndexRef.current = event.currentTarget.selectionStart;
+      setFieldSearch("");
+      setFieldMenuOpen(true);
+    } else if (event.key === "Escape") {
+      setFieldMenuOpen(false);
+      slashIndexRef.current = null;
+    }
+  }
+
+  function openFieldMenu() {
+    const textarea = editorRef.current?.querySelector("textarea");
+    if (textarea) cursorIndexRef.current = textarea.selectionStart;
+    slashIndexRef.current = null;
+    setFieldSearch("");
+    setFieldMenuOpen(true);
+  }
+
+  function insertField(field: PrintTemplateField) {
+    if (!draft) return;
+    const textarea = editorRef.current?.querySelector("textarea");
+    const cursor =
+      slashIndexRef.current ??
+      textarea?.selectionStart ??
+      cursorIndexRef.current;
+    const start =
+      slashIndexRef.current === null ? cursor : Math.max(0, cursor - 1);
+    const token = `{{${field.token}}}`;
+    const nextContent =
+      draft.content.slice(0, start) + token + draft.content.slice(cursor);
+    updateDraft("content", nextContent);
+    setFieldMenuOpen(false);
+    slashIndexRef.current = null;
+    window.requestAnimationFrame(() => {
+      const nextTextarea = editorRef.current?.querySelector("textarea");
+      nextTextarea?.focus();
+      nextTextarea?.setSelectionRange(
+        start + token.length,
+        start + token.length,
+      );
+    });
+  }
 
   async function invalidateTemplates() {
     await queryClient.invalidateQueries({
@@ -212,6 +308,7 @@ export function PrintTemplateManagement({
       storeName: displayName,
     });
   }, [displayName, draft]);
+  const fieldsByGroup = groupedFields(fieldSearch);
   const canSave = isNewDraft ? canCreate : canUpdate;
 
   return (
@@ -412,9 +509,14 @@ export function PrintTemplateManagement({
                         <option value="landscape">Khổ ngang</option>
                       </select>
                     </label>
-                    <span className="print-template-slash-help">
+                    <button
+                      className="print-template-slash-help"
+                      type="button"
+                      onClick={openFieldMenu}
+                      disabled={!canEditContent}
+                    >
                       Gõ / để chèn thông tin
-                    </span>
+                    </button>
                     {!isNewDraft && canUpdate && (
                       <label className="print-template-default-toggle">
                         <AppInput
@@ -448,14 +550,81 @@ export function PrintTemplateManagement({
                     </div>
                   )}
                   <div
+                    ref={editorRef}
                     className="print-template-markdown-editor"
                     data-color-mode="light"
                   >
-                    <PrintTemplateMarkdownEditor
-                      value={draft.content}
-                      editable={canEditContent && !busy}
-                      onChange={(value) => updateDraft("content", value)}
-                    />
+                    {canEditContent ? (
+                      <MarkdownEditor
+                        value={draft.content}
+                        onChange={(value) =>
+                          updateDraft("content", value || "")
+                        }
+                        preview="edit"
+                        visibleDragbar={false}
+                        highlightEnable={false}
+                        height="100%"
+                        textareaProps={{
+                          "aria-label": "Nội dung mẫu in dạng Markdown",
+                          spellCheck: true,
+                          onClick: trackEditorCursor,
+                          onKeyUp: handleEditorKeyUp,
+                          onSelect: trackEditorCursor,
+                        }}
+                        previewOptions={{
+                          rehypePlugins: [[rehypeSanitize]],
+                        }}
+                      />
+                    ) : (
+                      <MarkdownPreview
+                        source={draft.content}
+                        rehypePlugins={[[rehypeSanitize]]}
+                        className="print-template-readonly-markdown"
+                      />
+                    )}
+                    {fieldMenuOpen && canEditContent && (
+                      <div
+                        className="print-template-field-menu"
+                        role="dialog"
+                        aria-label="Chèn thông tin hóa đơn"
+                      >
+                        <label className="print-template-field-search">
+                          <Search size={16} aria-hidden="true" />
+                          <input
+                            ref={fieldSearchRef}
+                            value={fieldSearch}
+                            onChange={(event) =>
+                              setFieldSearch(event.target.value)
+                            }
+                            placeholder="Tìm kiếm thông tin…"
+                            aria-label="Tìm thông tin để chèn"
+                          />
+                        </label>
+                        <div className="print-template-field-options">
+                          {Object.entries(fieldsByGroup).map(
+                            ([group, fields]) => (
+                              <section key={group}>
+                                <h3>{group}</h3>
+                                {fields.map((field) => (
+                                  <button
+                                    key={field.token}
+                                    type="button"
+                                    title={field.description}
+                                    onClick={() => insertField(field)}
+                                  >
+                                    <code>{field.label}</code>
+                                    <span>{field.token}</span>
+                                  </button>
+                                ))}
+                              </section>
+                            ),
+                          )}
+                          {!Object.keys(fieldsByGroup).length && (
+                            <p className="muted">Không tìm thấy thông tin.</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </section>
 
