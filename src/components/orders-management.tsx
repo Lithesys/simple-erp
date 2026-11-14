@@ -7,7 +7,6 @@ import { SearchInputField } from "@/components/search-input-field";
 import { mergeClassNames } from "@/lib/class-names";
 import { AppTable } from "@/components/app-table";
 import { ReceiptPrint } from "@/components/receipt-print";
-import { usePrintTemplates } from "@/lib/use-print-templates";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -230,7 +229,6 @@ export function OrdersManagement({
   const detailOrderId = detailModal.id;
   const isMobileDetailRoute = Boolean(detailOrderId && isMobileRoute);
   const supabase = createClient();
-  const { ensureLoaded: ensurePrintTemplateLoaded } = usePrintTemplates();
   const queryClient = useQueryClient();
   const [rows, setRows] = useState<Order[]>([]);
   const [total, setTotal] = useState(0);
@@ -330,36 +328,6 @@ export function OrdersManagement({
     },
   });
   const items = orderEditForm.watch("items");
-  const receiptPrintData = useMemo(
-    () =>
-      selected
-        ? {
-            order_no: selected.order_no,
-            customer_name: selected.customer_name,
-            customer_phone: selected.customer_phone,
-            customer_address: selected.customer_address,
-            note: selected.note || "",
-            price_list_name: selected.price_list_name,
-            subtotal: selected.subtotal,
-            discount: selected.discount,
-            total: selected.total,
-            created_at: formatDateTime(selected.created_at),
-          }
-        : null,
-    [selected],
-  );
-  const receiptPrintItems = useMemo(
-    () =>
-      items.map((item) => ({
-        key: item.id,
-        name: item.product_name,
-        unit: item.unit,
-        quantity: item.quantity,
-        unitPrice: item.unit_price,
-        lineTotal: item.line_total,
-      })),
-    [items],
-  );
   const editPriceListId = orderEditForm.watch("priceListId");
   const [orderEditPriceLists, setOrderEditPriceLists] = useState<
     OrderEditPriceList[]
@@ -1277,11 +1245,7 @@ export function OrdersManagement({
     });
     void load(page, size, filters);
     if (autoPrintSettingReady && autoPrint) {
-      window.setTimeout(() => {
-        void ensurePrintTemplateLoaded()
-          .catch(() => undefined)
-          .then(() => printPage());
-      }, 300);
+      window.setTimeout(printPage, 300);
     }
   }
   async function cancelOrder() {
@@ -3170,11 +3134,7 @@ export function OrdersManagement({
                     variant="primary"
                     type="button"
 
-                    onClick={() => {
-                      void ensurePrintTemplateLoaded()
-                        .catch(() => undefined)
-                        .then(() => printPage());
-                    }}
+                    onClick={printPage}
                   >
                     In
                   </AppButton>
@@ -3221,8 +3181,26 @@ export function OrdersManagement({
       />
       {selected && (
         <ReceiptPrint
-          receipt={receiptPrintData!}
-          items={receiptPrintItems}
+          receipt={{
+            order_no: selected.order_no,
+            customer_name: selected.customer_name,
+            customer_phone: selected.customer_phone,
+            customer_address: selected.customer_address,
+            note: selected.note || "",
+            price_list_name: selected.price_list_name,
+            subtotal: selected.subtotal,
+            discount: selected.discount,
+            total: selected.total,
+            created_at: formatDateTime(selected.created_at),
+          }}
+          items={items.map((item) => ({
+            key: item.id,
+            name: item.product_name,
+            unit: item.unit,
+            quantity: item.quantity,
+            unitPrice: item.unit_price,
+            lineTotal: item.line_total,
+          }))}
         />
       )}
     </>

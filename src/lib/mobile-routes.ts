@@ -1,7 +1,6 @@
 const routePairs = [
   ["/account", "/mobile/account"],
   ["/activity-history", "/mobile/activity-history"],
-  ["/system/print-templates", "/mobile/system/print-templates"],
   ["/system/settings", "/mobile/system/settings"],
   ["/dashboard", "/mobile/dashboard"],
   ["/debt", "/mobile/debt"],

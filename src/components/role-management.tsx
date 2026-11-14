@@ -132,15 +132,6 @@ const permissionCategories: {
     ],
   },
   {
-    category: "Mẫu in",
-    permissions: [
-      { permission: "print_templates.read", label: "Xem mẫu in" },
-      { permission: "print_templates.create", label: "Tạo mẫu in" },
-      { permission: "print_templates.update", label: "Chỉnh sửa mẫu in" },
-      { permission: "print_templates.delete", label: "Xóa mẫu in" },
-    ],
-  },
-  {
     category: "Tài khoản và phân quyền",
     permissions: [
       { permission: "accounts.manage", label: "Quản lý tài khoản" },
