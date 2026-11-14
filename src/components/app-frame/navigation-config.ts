@@ -106,6 +106,11 @@ export const APP_NAVIGATION: NavGroup[] = [
     label: "Hệ thống",
     children: [
       {
+        href: "/system/print-templates",
+        label: "Mẫu in",
+        page: "printTemplates",
+      },
+      {
         href: "/system/settings",
         label: "Cài đặt",
         page: "systemSettings",

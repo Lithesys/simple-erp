@@ -31,6 +31,10 @@ export type Permission =
   | "products.archive"
   | "products.cost.read"
   | "price_lists.manage"
+    | "print_templates.read"
+    | "print_templates.create"
+    | "print_templates.update"
+    | "print_templates.delete"
   | "accounts.manage"
   | "roles.manage"
   | "activity_history.read";

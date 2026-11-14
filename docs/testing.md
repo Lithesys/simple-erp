@@ -23,7 +23,7 @@ Không đưa giá trị thật vào tài liệu, lệnh có thể lưu lịch s�
 
 ### Admin
 
-- Mở `/pos`, `/dashboard`, `/account`, `/management/products`, `/management/purchase`, `/stock-check`, `/management/customers`, `/debt`, `/management/orders`, `/management/price-lists`, `/management/accounts` và `/management/roles`.
+- Mở `/pos`, `/dashboard`, `/analysis/products`, `/analysis/sales`, `/account`, `/management/products`, `/management/purchase`, `/stock-check`, `/management/customers`, `/debt`, `/management/orders`, `/management/price-lists`, `/system/print-templates`, `/management/accounts` và `/management/roles`.
 - Trên các bảng/thẻ thực thể, nhấn vào nội dung hàng để mở modal chi tiết; xác nhận không có nút mắt ngoài bảng. Bút chì chỉnh sửa chỉ xuất hiện trong đầu modal bên cạnh nút đóng và chỉ khi tài khoản có quyền cập nhật. Các thao tác xóa, duyệt, hủy và xuất vẫn ẩn khi thiếu quyền tương ứng.
 - Ở Hàng hóa, nhấn ô giá bán/giá vốn để sửa trực tiếp; ô phải giữ focus mà không mở modal chi tiết. Dùng Enter để lưu giá hiện có mà không đổi số và xác nhận focus chuyển tiếp vẫn không mở modal. Không thay đổi giá trên dữ liệu dùng chung.
 - Ở thanh điều hướng, hover hoặc dùng bàn phím mở menu Khách hàng; xác nhận mục Quản lý nợ dẫn đến `/debt`. Trong Công nợ, xác nhận bộ lọc ngày mặc định là tháng hiện tại và khôi phục khoảng ngày đã lưu trong localStorage nếu có. Kiểm tra danh sách và các bộ lọc ngày, khách hàng, loại nợ, từ khóa và trạng thái trên cùng một màn hình. Chọn cả khách hàng và loại nợ để xác nhận hàng tổng tự hiện. Kiểm tra lựa chọn Tạo mới có nền xanh, mở rồi đóng modal tạo mới. Mở một hàng để xem chi tiết; nếu có quyền sửa thì xác nhận bút chì nằm cạnh nút đóng và biểu mẫu mở đúng khoản nợ. Không lưu thay đổi hoặc xóa dữ liệu trong kiểm tra chỉ đọc.
@@ -36,7 +36,7 @@ Không đưa giá trị thật vào tài liệu, lệnh có thể lưu lịch s�
 - Ở Đơn hàng và Nhập hàng, mở/đóng bộ lọc, kiểm tra ngày, trạng thái, mã đơn và URL sau khi áp dụng/xóa bộ lọc. Xác nhận nút Áp dụng trong bộ chọn ngày tự tải lại Đơn hàng mà không cần bấm Tìm kiếm lần nữa. Không gửi thao tác cập nhật dữ liệu.
 - Ở Đơn hàng, xác nhận danh sách mặc định giữ cả đơn hoàn thành và đã hủy. Đơn đã hủy phải còn mở được, hiện trạng thái **Đã hủy**, không có thao tác sửa hoặc hủy lần nữa; không bấm thao tác hủy trong kiểm tra chỉ đọc.
 - Ở Kiểm kho, xác nhận tìm kiếm, chọn nhiều hàng hóa dạng tag (phiếu phải có đủ mọi mặt hàng đã chọn), lọc ngày/trạng thái, xóa bộ lọc, sắp xếp, mở chi tiết phiếu và trạng thái tải xong. Không lưu, hoàn thành, sửa hoặc hủy phiếu trên dữ liệu dùng chung.
-- Ở Bảng giá, Tài khoản và Vai trò, xác nhận danh sách hoặc thẻ tải xong.
+- Ở Bảng giá, Mẫu in, Tài khoản và Vai trò, xác nhận danh sách hoặc thẻ tải xong. Mẫu in: mở một thẻ, kiểm tra modal soạn thảo và bản xem trước, rồi đóng mà không lưu; thử gõ `/` và xác nhận danh sách trường hóa đơn xuất hiện.
 
 ### Nhân viên
 

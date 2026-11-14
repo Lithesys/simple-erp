@@ -6,6 +6,7 @@ import { AppTextarea } from "@/components/app-textarea";
 import { CustomerEditorDialog } from "@/components/customer-editor-dialog";
 import { mergeClassNames } from "@/lib/class-names";
 import { ReceiptPrint } from "@/components/receipt-print";
+import { useUserAccess } from "@/components/app-frame/hooks/use-user-access";
 
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -44,6 +45,7 @@ import {
 } from "@/lib/pos-search-cache";
 import { customerValues, type Customer } from "@/lib/customers";
 import { changedFieldPatch } from "@/lib/partial-update";
+import { usePrintTemplates } from "@/lib/use-print-templates";
 
 type Receipt = {
   order_no: string;
@@ -78,6 +80,8 @@ export function PointOfSale({
   canCreateCustomer: boolean;
   canUpdateCustomer: boolean;
 }) {
+  const { access } = useUserAccess();
+  const { ensureLoaded: ensurePrintTemplateLoaded } = usePrintTemplates();
   const pathname = usePathname();
   const isMobileRoute = pathname.startsWith("/mobile/");
   const {
@@ -563,6 +567,28 @@ export function PointOfSale({
     items: cart,
   };
   const printableReceipt = receipt || draft;
+  const receiptPrintData = useMemo(
+    () => ({ ...printableReceipt, cashier_name: access?.name || "" }),
+    [access?.name, printableReceipt],
+  );
+  const receiptPrintItems = useMemo(
+    () =>
+      printableReceipt.items.map((line) => ({
+        key: line.product.id,
+        name: line.product.name,
+        unit: line.product.unit,
+        quantity: line.quantity,
+        unitPrice: line.price,
+        lineTotal: line.price * line.quantity,
+      })),
+    [printableReceipt.items],
+  );
+
+  const printAfterTemplateIsReady = useCallback(() => {
+    void ensurePrintTemplateLoaded()
+      .catch(() => undefined)
+      .then(() => printPage());
+  }, [ensurePrintTemplateLoaded]);
 
   async function pay(values: SaleFormValues) {
     if (values.cart.length === 0 || busy) return;
@@ -708,7 +734,7 @@ export function PointOfSale({
     toast.success("Thanh toán thành công · " + result.order_no, {
       autoClose: 2000,
     });
-    window.setTimeout(printPage, 300);
+    window.setTimeout(printAfterTemplateIsReady, 300);
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["pos-products"] }),
       queryClient.invalidateQueries({ queryKey: ["purchase-products"] }),
@@ -755,7 +781,7 @@ export function PointOfSale({
       items: draftCart,
     });
     setDraftPrint(true);
-    window.setTimeout(printPage, 300);
+    window.setTimeout(printAfterTemplateIsReady, 300);
   }
 
   async function saveCustomer(values: Customer) {
@@ -1185,16 +1211,9 @@ export function PointOfSale({
       </div>
 
       <ReceiptPrint
-        receipt={printableReceipt}
+        receipt={receiptPrintData}
         isDraft={draftPrint}
-        items={printableReceipt.items.map((line) => ({
-          key: line.product.id,
-          name: line.product.name,
-          unit: line.product.unit,
-          quantity: line.quantity,
-          unitPrice: line.price,
-          lineTotal: line.price * line.quantity,
-        }))}
+        items={receiptPrintItems}
       />
       {receipt && (
         <ModalLayer
@@ -1231,7 +1250,7 @@ export function PointOfSale({
                 variant="primary"
                 className="btn-print"
                 aria-label="In hóa đơn"
-                onClick={printPage}
+                onClick={printAfterTemplateIsReady}
               >
                 In hóa đơn
               </AppButton>

@@ -32,6 +32,10 @@ Quyền được gán theo vai trò trong trang **Vai trò & quyền**. Tài kho
 | Khách hàng | `customers.update`      | Sửa khách hàng.                                                                           |
 | Khách hàng | `customers.delete`      | Xóa khách hàng.                                                                           |
 | Bảng giá   | `price_lists.manage`    | Quản lý bảng giá.                                                                         |
+| Mẫu in     | `print_templates.read`   | Xem danh sách, nội dung và bản xem trước của mẫu in.                                     |
+| Mẫu in     | `print_templates.create` | Tạo mẫu in.                                                                              |
+| Mẫu in     | `print_templates.update` | Chỉnh sửa nội dung, khổ giấy và mẫu mặc định.                                             |
+| Mẫu in     | `print_templates.delete` | Xóa mẫu in không còn được dùng làm mặc định.                                              |
 | Tài khoản  | `accounts.manage`       | Quản lý tài khoản và vai trò gắn với tài khoản.                                           |
 | Vai trò    | `roles.manage`          | Tạo, sửa và xóa vai trò.                                                                  |
 
@@ -62,6 +66,10 @@ Cột **Tiền lời** trong danh sách đơn hàng và chỉ số **Tiền lờ
 Ngừng kinh doanh chỉ đổi trạng thái hàng hóa; bản ghi, đơn giá và lịch sử vẫn được giữ. Người có `products.read` xem được cả hàng đang và đã ngừng kinh doanh. Chỉ người có `products.archive` mới được ngừng kinh doanh hoặc kinh doanh lại; thiếu quyền này thì không hiện thao tác kinh doanh lại.
 
 Hủy đơn giữ nguyên hóa đơn và các dòng hàng, đổi trạng thái thành **Đã hủy**, đồng thời cộng số lượng đã bán lại vào kho. Đơn đã hủy không thể mở lại và không bị xóa khỏi danh sách. Quyền `orders.delete` chỉ còn cho phép hủy đơn; database chặn xóa cứng.
+
+## Mẫu in
+
+Trang `/system/print-templates` yêu cầu `print_templates.read`; các nút tạo, sửa, đặt mặc định và xóa kiểm tra riêng quyền tương ứng. Mẫu được lưu dùng chung trong `public.print_templates` và được RLS bảo vệ. Tài khoản có quyền bán hàng hoặc xem đơn hàng chỉ đọc được mẫu mặc định để in hóa đơn, không mở được trang quản lý nếu thiếu quyền xem mẫu in. Mẫu mặc định không thể bị xóa; hãy đặt một mẫu khác làm mặc định trước.
 
 ## Vai trò mặc định
 

@@ -22,6 +22,10 @@ Database changes live in timestamped files under `supabase/migrations/`. Each mi
 
 The migration `20261105044617_shared_app_settings.sql` creates `public.app_settings`, a generic JSONB key/value table, and seeds the public `store_name` setting with the default `ERP`. RLS allows public reads only for rows marked public and restricts all writes and private reads to `accounts.manage`. Explicit Data API grants are included. The rollback drops the table and all values added to it; export settings before using the rollback after deployment.
 
+## Print templates
+
+The migration `20261114014029_print_template_management.sql` creates the shared `public.print_templates` table, seeds an 80 mm default invoice, adds role permissions and RLS policies, and provides `set_default_print_template` for an atomic default switch. Sales and order readers can read only the default template for printing; full template management requires `print_templates.read` plus the action permission. The matching rollback removes the function, table, seed, and only the four `print_templates.*` permissions. Any templates created after deployment are deleted by rollback, so export them before rolling back a live installation.
+
 ## Debt feature rollback
 
 The prepared script is [20261010020929_plan_10_09_01_debts.sql](../supabase/rollbacks/20261010020929_plan_10_09_01_debts.sql). It removes the debt RPC/table, strips only the `debts.*` permissions, and restores the pre-feature `customers_read` policy. Dropping the table deletes all debt rows, so export them first if rollback occurs after users have created records.
