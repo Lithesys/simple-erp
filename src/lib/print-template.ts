@@ -26,6 +26,7 @@ export type ReceiptPrintData = {
 
 export type ReceiptPrintItem = {
   key: string;
+  sku?: string;
   name: string;
   unit: string;
   quantity: number;
@@ -45,6 +46,10 @@ export type PrintTemplateField = {
   token: string;
   description: string;
 };
+
+export const PRINT_TEMPLATE_FONT_SIZES = [
+  8, 9, 10, 11, 12, 14, 15, 16, 18, 20, 24, 30,
+] as const;
 
 export const PRINT_TEMPLATE_FIELDS: PrintTemplateField[] = [
   {
@@ -109,9 +114,45 @@ export const PRINT_TEMPLATE_FIELDS: PrintTemplateField[] = [
   },
   {
     group: "Hàng hóa",
-    label: "Bảng hàng hóa",
-    token: "invoice.items_table",
-    description: "Danh sách mặt hàng, số lượng, đơn giá và thành tiền.",
+    label: "STT hàng hóa",
+    token: "invoice.item.index",
+    description: "Số thứ tự mặt hàng trong dòng lặp của bảng hàng hóa.",
+  },
+  {
+    group: "Hàng hóa",
+    label: "Mã hàng",
+    token: "invoice.item.sku",
+    description: "Mã SKU của mặt hàng trong dòng lặp của bảng hàng hóa.",
+  },
+  {
+    group: "Hàng hóa",
+    label: "Tên hàng",
+    token: "invoice.item.name",
+    description: "Tên mặt hàng trong dòng lặp của bảng hàng hóa.",
+  },
+  {
+    group: "Hàng hóa",
+    label: "Số lượng hàng",
+    token: "invoice.item.quantity",
+    description: "Số lượng trong dòng lặp của bảng hàng hóa.",
+  },
+  {
+    group: "Hàng hóa",
+    label: "Đơn vị hàng",
+    token: "invoice.item.unit",
+    description: "Đơn vị tính trong dòng lặp của bảng hàng hóa.",
+  },
+  {
+    group: "Hàng hóa",
+    label: "Đơn giá hàng",
+    token: "invoice.item.unit_price",
+    description: "Đơn giá trong dòng lặp của bảng hàng hóa.",
+  },
+  {
+    group: "Hàng hóa",
+    label: "Thành tiền hàng",
+    token: "invoice.item.line_total",
+    description: "Thành tiền trong dòng lặp của bảng hàng hóa.",
   },
   {
     group: "Tổng tiền",
@@ -133,26 +174,46 @@ export const PRINT_TEMPLATE_FIELDS: PrintTemplateField[] = [
   },
 ];
 
+export const DEFAULT_PRINT_TEMPLATE_ITEMS_TABLE = `| Hàng hóa | ĐVT | SL | Giá | Tiền |
+| :--- | :--- | ---: | ---: | ---: |
+| **{{invoice.item.name}}** | {{invoice.item.unit}} | {{invoice.item.quantity}} | {{invoice.item.unit_price}} | {{invoice.item.line_total}} |`;
+
 export const DEFAULT_PRINT_TEMPLATE_CONTENT = `# {{store.name}}
 
-**{{invoice.document_title}}**\
-**Mã đơn:** {{invoice.order_no}}\
-**Ngày:** {{invoice.created_at}}
+:::print-align=center
+{{invoice.document_title}}
+:::
+
+:::print-align=center
+{{invoice.created_at}}
+:::
 
 ---
 
-**Tên KH:** {{invoice.customer_name}}\
-**Địa chỉ:** {{invoice.customer_address}}\
-**SĐT:** {{invoice.customer_phone}}\
-**Thu ngân:** {{invoice.cashier_name}}
+Mã đơn: {{invoice.order_no}}
 
-{{invoice.items_table}}
+Khách hàng: **{{invoice.customer_name}}**
 
-**Tổng tiền hàng:** {{invoice.subtotal}}\
-**Giảm:** {{invoice.discount}}\
-**Thanh toán:** {{invoice.total}}
+Số điện thoại: {{invoice.customer_phone}}
 
-*Cảm ơn quý khách, hẹn gặp lại!*
+Địa chỉ: {{invoice.customer_address}}
+
+Bảng giá: {{invoice.price_list_name}}
+
+Ghi chú: {{invoice.note}}
+
+${DEFAULT_PRINT_TEMPLATE_ITEMS_TABLE}
+
+---
+
+| Tổng tiền hàng | **{{invoice.subtotal}}** |
+| :--- | ---: |
+| Giảm giá | **{{invoice.discount}}** |
+| **THANH TOÁN** | **{{invoice.total}}** |
+
+:::print-align=center
+Xin cảm ơn quý khách!
+:::
 `;
 
 export const DEFAULT_PRINT_TEMPLATE: PrintTemplate = {
@@ -183,6 +244,7 @@ export const PRINT_TEMPLATE_PREVIEW_DATA: PrintTemplatePreviewData = {
   items: [
     {
       key: "sample-1",
+      sku: "KM-XMAS",
       name: "Combo Váy nữ Alcado KM-XMAS",
       unit: "chiếc",
       quantity: 4,
@@ -191,6 +253,7 @@ export const PRINT_TEMPLATE_PREVIEW_DATA: PrintTemplatePreviewData = {
     },
     {
       key: "sample-2",
+      sku: "KM-XMAS",
       name: "KM-XMAS",
       unit: "cái",
       quantity: 1,
@@ -199,6 +262,7 @@ export const PRINT_TEMPLATE_PREVIEW_DATA: PrintTemplatePreviewData = {
     },
     {
       key: "sample-3",
+      sku: "KM-XMAS",
       name: "KM-XMAS",
       unit: "cái",
       quantity: 1,
@@ -211,9 +275,12 @@ export const PRINT_TEMPLATE_PREVIEW_DATA: PrintTemplatePreviewData = {
 const moneyFormatter = new Intl.NumberFormat("vi-VN", {
   maximumFractionDigits: 0,
 });
+const quantityFormatter = new Intl.NumberFormat("vi-VN", {
+  maximumFractionDigits: 3,
+});
 
 export function formatPrintMoney(value: number) {
-  return `${moneyFormatter.format(Math.round(value))} ₫`;
+  return `${moneyFormatter.format(Math.round(value))} VNĐ`;
 }
 
 function escapeMarkdownText(value: string) {
@@ -225,16 +292,82 @@ function escapeMarkdownText(value: string) {
     .replace(/[\r\n]+/g, " ");
 }
 
-function makeItemsTable(items: ReceiptPrintItem[]) {
-  const rows = items.map(
-    (item, index) =>
-      `| ${index + 1} | ${escapeMarkdownText(item.name)} | ${escapeMarkdownText(String(item.quantity))} | ${escapeMarkdownText(item.unit)} | ${escapeMarkdownText(moneyFormatter.format(Math.round(item.unitPrice)))} | ${escapeMarkdownText(moneyFormatter.format(Math.round(item.lineTotal)))} |`,
-  );
-  return [
-    "| STT | Tên hàng | SL | ĐVT | Giá | Thành tiền |",
-    "| ---: | :--- | ---: | :--- | ---: | ---: |",
-    ...rows,
-  ].join("\n");
+export function normalizePrintTemplateContent(template: string) {
+  return template
+    .replace(/\n*<!--print-template-column-widths:[\s\S]*?-->/g, "")
+    .replace(
+      /^[ \t]*\{\{\s*invoice\.items_table\s*\}\}[ \t]*$/gim,
+      DEFAULT_PRINT_TEMPLATE_ITEMS_TABLE,
+    );
+}
+
+export function getPrintTemplateColumnWidths(template: string) {
+  const match = /<!--print-template-column-widths:([\s\S]*?)-->/.exec(template);
+  if (!match) return [] as number[][];
+  try {
+    const parsed: unknown = JSON.parse(match[1]);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((table) =>
+      Array.isArray(table)
+        ? table.map((width) => {
+            const value = Number(width);
+            return Number.isFinite(value) && value > 0
+              ? Math.max(1, Math.min(99, value))
+              : 0;
+          })
+        : [],
+    ) as number[][];
+  } catch {
+    return [];
+  }
+}
+
+export function setPrintTemplateColumnWidths(
+  template: string,
+  widths: number[][],
+) {
+  const clean = normalizePrintTemplateContent(template).trimEnd();
+  const marker = `<!--print-template-column-widths:${JSON.stringify(widths)}-->`;
+  return `${clean}\n\n${marker}`;
+}
+
+function itemFieldValue(item: ReceiptPrintItem, index: number, field: string) {
+  switch (field) {
+    case "index":
+      return String(index + 1);
+    case "sku":
+      return item.sku || "";
+    case "name":
+      return item.name;
+    case "quantity":
+      return quantityFormatter.format(item.quantity);
+    case "unit":
+      return item.unit;
+    case "unit_price":
+      return moneyFormatter.format(Math.round(item.unitPrice));
+    case "line_total":
+      return moneyFormatter.format(Math.round(item.lineTotal));
+    default:
+      return "";
+  }
+}
+
+function expandItemRows(template: string, items: ReceiptPrintItem[]) {
+  return template
+    .split("\n")
+    .flatMap((line) => {
+      if (!line.startsWith("|") || !/\{\{\s*invoice\.item\./i.test(line)) {
+        return [line];
+      }
+      return items.map((item, index) =>
+        line.replace(
+          /\{\{\s*invoice\.item\.([a-z0-9_]+)\s*\}\}/gi,
+          (_match, field: string) =>
+            escapeMarkdownText(itemFieldValue(item, index, field)),
+        ),
+      );
+    })
+    .join("\n");
 }
 
 export function renderPrintTemplate(
@@ -248,8 +381,8 @@ export function renderPrintTemplate(
     "invoice.order_no": receipt.order_no,
     "invoice.created_at": receipt.created_at,
     "invoice.customer_name": receipt.customer_name,
-    "invoice.customer_phone": receipt.customer_phone,
-    "invoice.customer_address": receipt.customer_address,
+    "invoice.customer_phone": receipt.customer_phone || "—",
+    "invoice.customer_address": receipt.customer_address || "—",
     "invoice.cashier_name": receipt.cashier_name || "",
     "invoice.price_list_name": receipt.price_list_name,
     "invoice.note": receipt.note,
@@ -258,10 +391,30 @@ export function renderPrintTemplate(
     "invoice.total": formatPrintMoney(receipt.total),
   };
 
-  return template.replace(
+  const normalizedTemplate = normalizePrintTemplateContent(template);
+  const alignedTemplate = normalizedTemplate.replace(
+    /:::print-align=(left|center|right)\s*\r?\n([\s\S]*?)\r?\n:::/gi,
+    (_match, alignment: string, content: string) =>
+      `<span class="receipt-line-align-${alignment.toLowerCase()}">${content}</span>`,
+  );
+  const columnTemplate = alignedTemplate.replace(
+    /:::print-columns\s*\r?\n([\s\S]*?)\r?\n\|\|\|\r?\n([\s\S]*?)\r?\n:::/gi,
+    (_match, left: string, right: string) =>
+      `<div class="print-template-columns" data-print-columns="2"><div>${left}</div><div>${right}</div></div>`,
+  );
+  const withOptionalNote = receipt.note.trim()
+    ? columnTemplate
+    : columnTemplate
+        .split("\n")
+        .filter((line) => !line.includes("{{invoice.note}}"))
+        .join("\n");
+  const expandedRows = expandItemRows(withOptionalNote, items);
+
+  return expandedRows.replace(
     /\{\{\s*([a-z0-9_.]+)\s*\}\}/gi,
     (match, token: string) => {
-      if (token === "invoice.items_table") return makeItemsTable(items);
+      if (token === "invoice.items_table" || token.startsWith("invoice.item."))
+        return "";
       if (!Object.prototype.hasOwnProperty.call(values, token)) return "";
       return escapeMarkdownText(values[token]);
     },

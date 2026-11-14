@@ -6,6 +6,7 @@ import { FileText, Plus, Printer, Star, Trash2, X } from "lucide-react";
 import {
   useCallback,
   useMemo,
+  useRef,
   useState,
   type CSSProperties,
   type FormEvent,
@@ -27,10 +28,13 @@ import { createClient } from "@/lib/data/client";
 import {
   DEFAULT_PRINT_TEMPLATE,
   DEFAULT_PRINT_TEMPLATE_CONTENT,
+  getPrintTemplateColumnWidths,
   PRINT_TEMPLATE_PREVIEW_DATA,
   renderPrintTemplate,
+  setPrintTemplateColumnWidths,
   type PrintTemplate,
 } from "@/lib/print-template";
+import { PRINT_TEMPLATE_SANITIZE_SCHEMA } from "@/lib/print-template-sanitize";
 import {
   PRINT_TEMPLATES_QUERY_KEY,
   usePrintTemplates,
@@ -67,6 +71,8 @@ export function PrintTemplateManagement({
   const { displayName } = useStoreBrand();
   const { templates, userId, loading, error: loadError } = usePrintTemplates();
   const [draft, setDraft] = useState<TemplateDraft | null>(null);
+  const [columnWidths, setColumnWidths] = useState<number[][]>([]);
+  const columnWidthsRef = useRef<number[][]>([]);
   const [sourceWasDefault, setSourceWasDefault] = useState(false);
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState("");
@@ -78,12 +84,17 @@ export function PrintTemplateManagement({
 
   const openTemplate = useCallback((template: PrintTemplate) => {
     setDraft({ ...template });
+    const widths = getPrintTemplateColumnWidths(template.content);
+    columnWidthsRef.current = widths;
+    setColumnWidths(widths);
     setSourceWasDefault(template.is_default);
     setFormError("");
   }, []);
 
   function openCreate() {
     setDraft(newTemplateDraft());
+    columnWidthsRef.current = [];
+    setColumnWidths([]);
     setSourceWasDefault(false);
     setFormError("");
   }
@@ -99,6 +110,26 @@ export function PrintTemplateManagement({
     value: TemplateDraft[K],
   ) {
     setDraft((current) => (current ? { ...current, [field]: value } : current));
+  }
+
+  function updateContent(value: string) {
+    updateDraft(
+      "content",
+      setPrintTemplateColumnWidths(value, columnWidthsRef.current),
+    );
+  }
+
+  function updateColumnWidths(widths: number[][]) {
+    columnWidthsRef.current = widths;
+    setColumnWidths(widths);
+    setDraft((current) =>
+      current
+        ? {
+            ...current,
+            content: setPrintTemplateColumnWidths(current.content, widths),
+          }
+        : current,
+    );
   }
 
   const isNewDraft = draft?.id === "";
@@ -212,7 +243,30 @@ export function PrintTemplateManagement({
       storeName: displayName,
     });
   }, [displayName, draft]);
+  const paperWidthMm = draft
+    ? draft.paper_width_mm === 210 && draft.paper_orientation === "landscape"
+      ? 297
+      : draft.paper_width_mm
+    : 80;
+  const paperHeightMm = draft
+    ? draft.paper_width_mm === 210
+      ? draft.paper_orientation === "landscape"
+        ? 210
+        : 297
+      : null
+    : null;
   const canSave = isNewDraft ? canCreate : canUpdate;
+  const columnWidthRules = columnWidths
+    .flatMap((widths, tableIndex) =>
+      widths.map((width, columnIndex) => {
+        if (!width) return "";
+        const safeWidth = Math.max(1, Math.min(99, width)).toFixed(2);
+        const selector = `table:nth-of-type(${tableIndex + 1}) :is(th, td):nth-child(${columnIndex + 1})`;
+        return `.print-template-preview-paper .wmde-markdown ${selector} { width: ${safeWidth}% !important; }`;
+      }),
+    )
+    .filter(Boolean)
+    .join("\n");
 
   return (
     <>
@@ -339,18 +393,21 @@ export function PrintTemplateManagement({
                     type="button"
                     variant="secondary"
                     disabled={!canUpdate || busy}
-                    onClick={() =>
-                      updateDraft("content", DEFAULT_PRINT_TEMPLATE_CONTENT)
-                    }
+                    onClick={() => {
+                      columnWidthsRef.current = [];
+                      setColumnWidths([]);
+                      updateDraft("content", DEFAULT_PRINT_TEMPLATE_CONTENT);
+                    }}
                   >
                     Đặt lại
                   </AppButton>
                   <AppButton
                     type="button"
                     variant="secondary"
+                    className="print-template-modal__print-button"
+                    iconLeft={<Printer size={16} />}
                     onClick={printPage}
                   >
-                    <Printer size={16} aria-hidden="true" />
                     In thử
                   </AppButton>
                   {canSave && (
@@ -450,11 +507,21 @@ export function PrintTemplateManagement({
                   <div
                     className="print-template-markdown-editor"
                     data-color-mode="light"
+                    style={
+                      {
+                        "--print-paper-width": `${paperWidthMm}mm`,
+                        "--print-paper-height": paperHeightMm
+                          ? `${paperHeightMm}mm`
+                          : "600px",
+                      } as CSSProperties
+                    }
                   >
                     <PrintTemplateMarkdownEditor
                       value={draft.content}
                       editable={canEditContent && !busy}
-                      onChange={(value) => updateDraft("content", value)}
+                      onChange={updateContent}
+                      columnWidths={columnWidths}
+                      onColumnWidthsChange={updateColumnWidths}
                     />
                   </div>
                 </section>
@@ -474,14 +541,20 @@ export function PrintTemplateManagement({
                       className={`print-template-preview-paper paper-${draft.paper_width_mm}-${draft.paper_orientation}`}
                       style={
                         {
-                          "--print-paper-width": `${draft.paper_width_mm}mm`,
+                          "--print-paper-width": `${paperWidthMm}mm`,
+                          "--print-paper-height": paperHeightMm
+                            ? `${paperHeightMm}mm`
+                            : "600px",
                         } as CSSProperties
                       }
                       data-color-mode="light"
                     >
+                      {columnWidthRules && <style>{columnWidthRules}</style>}
                       <MarkdownPreview
                         source={previewSource}
-                        rehypePlugins={[[rehypeSanitize]]}
+                        rehypePlugins={[
+                          [rehypeSanitize, PRINT_TEMPLATE_SANITIZE_SCHEMA],
+                        ]}
                       />
                     </div>
                   </div>

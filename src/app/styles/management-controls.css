@@ -125,6 +125,15 @@
   opacity: var(--opacity-disabled);
   cursor: not-allowed;
 }
+.app-button:has(> svg):not(.app-button--icon-only) {
+  width: max-content;
+  min-width: max-content;
+  max-width: none;
+  min-height: 32px;
+  max-height: none;
+  padding-inline: 10px;
+  aspect-ratio: auto;
+}
 .app-button:is(
   .app-button--icon-only,
   :has(> svg:only-child),
@@ -139,36 +148,40 @@
   aspect-ratio: 1;
 }
 .app-button:is(
-  .app-button--icon-only,
-  :has(> svg:only-child),
-  :has(> .app-button-icon:only-child)
-) > svg,
+    .app-button--icon-only,
+    :has(> svg:only-child),
+    :has(> .app-button-icon:only-child)
+  )
+  > svg,
 .app-button:is(
-  .app-button--icon-only,
-  :has(> svg:only-child),
-  :has(> .app-button-icon:only-child)
-) .app-button-icon > svg {
+    .app-button--icon-only,
+    :has(> svg:only-child),
+    :has(> .app-button-icon:only-child)
+  )
+  .app-button-icon
+  > svg {
   width: 16px;
   height: 16px;
 }
 .app-button:is(
-  .app-button--icon-only,
-  :has(> svg:only-child),
-  :has(> .app-button-icon:only-child)
-):not(.app-button--danger) {
+    .app-button--icon-only,
+    :has(> svg:only-child),
+    :has(> .app-button-icon:only-child)
+  ):not(.app-button--danger) {
   border-color: transparent;
   background: transparent;
   color: var(--text-icon);
 }
 .app-button:is(
-  .app-button--icon-only,
-  :has(> svg:only-child),
-  :has(> .app-button-icon:only-child)
-):not(.app-button--danger):is(:hover, :active):not(:disabled) {
+    .app-button--icon-only,
+    :has(> svg:only-child),
+    :has(> .app-button-icon:only-child)
+  ):not(.app-button--danger):is(:hover, :active):not(:disabled) {
   border-color: var(--primary);
   background: var(--primary-subtle);
   color: var(--primary);
 }
+
 .action-list:has(> .app-button + .app-button)
   > .app-button:is(
     .app-button--icon-only,

@@ -575,6 +575,7 @@ export function PointOfSale({
     () =>
       printableReceipt.items.map((line) => ({
         key: line.product.id,
+        sku: line.product.sku,
         name: line.product.name,
         unit: line.product.unit,
         quantity: line.quantity,
@@ -1091,7 +1092,12 @@ export function PointOfSale({
                 canCreateCustomer={canCreateCustomer}
                 onCreateCustomer={() => {
                   setCustomerError("");
-                  setCustomerDialog({ id: "", name: "", phone: "", address: "" });
+                  setCustomerDialog({
+                    id: "",
+                    name: "",
+                    phone: "",
+                    address: "",
+                  });
                 }}
                 onEditCustomer={
                   canUpdateCustomer
@@ -1242,9 +1248,7 @@ export function PointOfSale({
 
                 onClick={() => setReceipt(null)}
               >
-                {draftPrint
-                  ? "Đóng"
-                  : `Tự đóng sau ${receiptCountdown} giây`}
+                {draftPrint ? "Đóng" : `Tự đóng sau ${receiptCountdown} giây`}
               </AppButton>
               <AppButton
                 variant="primary"
