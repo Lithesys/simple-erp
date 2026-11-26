@@ -269,11 +269,6 @@
 }
 .orders-filter-time {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--form-field-gap);
-}
-.orders-filter-time label {
-  display: grid;
   min-width: 0;
   gap: var(--form-label-gap);
   color: var(--text-secondary);
@@ -331,6 +326,14 @@
   border-radius: var(--radius-button);
   background: var(--surface);
   box-shadow: var(--shadow-card);
+}
+.orders-workspace .orders-filter-fields {
+  display: grid;
+  width: 100%;
+  gap: var(--form-field-gap);
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 .orders-filter-grid {
   display: grid;
@@ -462,13 +465,15 @@
 .orders-filter-statuses {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 12px;
-  padding-top: 12px;
+  gap: var(--form-label-gap);
+  margin: 0;
+  padding: var(--form-field-gap) 0 0;
+  border: 0;
   border-top: 1px solid var(--border-subtle);
 }
 .orders-filter-statuses legend {
   width: 100%;
-  margin-bottom: 7px;
+  margin: 0;
   color: var(--text-primary);
   font-size: var(--font-size-sm);
   font-weight: var(--weight-medium);
@@ -476,7 +481,7 @@
 .orders-filter-statuses label {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: var(--form-label-gap);
   color: var(--text-secondary);
   font-size: var(--font-size-sm);
 }
@@ -494,7 +499,14 @@
 }
 .orders-filter-actions {
   justify-content: flex-end;
-  padding-top: 8px;
+  padding-top: var(--form-field-gap);
+  border-top: 1px solid var(--border-subtle);
+}
+.date-range-calendar-footer {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: var(--form-field-gap);
+  padding: var(--form-field-gap) 4px 0;
   border-top: 1px solid var(--border-subtle);
 }
 .filter-clear-button {
@@ -506,4 +518,9 @@
 .filter-clear-button:hover {
   background: var(--primary-subtle);
   color: var(--primary);
+}
+@media (max-width: 720px) {
+  .daterangepicker .date-range-calendar-footer {
+    display: none !important;
+  }
 }

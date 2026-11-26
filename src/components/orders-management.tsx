@@ -16,7 +16,6 @@ import {
   ChevronRight,
   Pencil,
   Plus,
-  SlidersHorizontal,
   Trash2,
   X,
 } from "lucide-react";
@@ -27,6 +26,7 @@ import { DECIMAL_INPUT_STEP } from "@/lib/constants";
 import { AppSelect } from "@/components/app-select";
 import { CustomerPicker } from "@/components/customer-picker";
 import { DateRangeInput } from "@/components/date-range-input";
+import { FilterPanel } from "@/components/filter-panel";
 import {
   DataTable,
   type DataColumn,
@@ -34,7 +34,6 @@ import {
 } from "@/components/data-table";
 import { MobileSortControl } from "@/components/mobile-sort-control";
 import { MobileTableToolbarMetrics } from "@/components/mobile-table-toolbar-metrics";
-import { useDialogBehavior } from "@/lib/use-dialog-behavior";
 import { NumberInputField } from "@/components/number-input-field";
 import { formatDateTime } from "@/lib/date";
 import { printPage } from "@/lib/print-page";
@@ -182,7 +181,7 @@ const defaultOrderFilters = (): OrderFilters => ({
   productSkus: [],
   productId: "",
   productName: "",
-  statuses: ["completed", "cancelled"],
+  statuses: ["completed"],
   from: todayBangkok(),
   to: todayBangkok(),
   fromTime: "",
@@ -247,9 +246,9 @@ export function OrdersManagement({
   const [draftFilters, setDraftFilters] = useState<OrderFilters>(() =>
     defaultOrderFilters(),
   );
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const filterApplyTimerRef = useRef<number | null>(null);
-  const filterPanelRef = useRef<HTMLDivElement>(null);
+  const filterDraftRevisionRef = useRef(0);
+  const loadRequestIdRef = useRef(0);
   const [detailExportOpen, setDetailExportOpen] = useState(false);
   const [exportBusy, setExportBusy] = useState(false);
   const [exportError, setExportError] = useState("");
@@ -352,6 +351,7 @@ export function OrdersManagement({
     () =>
       items.map((item) => ({
         key: item.id,
+        sku: item.sku,
         name: item.product_name,
         unit: item.unit,
         quantity: item.quantity,
@@ -385,7 +385,7 @@ export function OrdersManagement({
     null,
   );
   const confirmAction = useRef<(() => Promise<void>) | null>(null);
-  const filterRootRef = useRef<HTMLElement>(null);
+  const productFilterRef = useRef<HTMLDivElement>(null);
   const [originalItems, setOriginalItems] = useState<Line[]>([]);
   const [summary, setSummary] = useState<OrderSummary>({
     count: 0,
@@ -431,6 +431,8 @@ export function OrdersManagement({
       nextFilters: OrderFilters = filters,
       nextSort: DataTableSort = sort,
     ) => {
+      const requestId = ++loadRequestIdRef.current;
+      const draftRevisionAtStart = filterDraftRevisionRef.current;
       const urlPage = Math.max(1, nextPage);
       const urlSize = nextSize;
       const productId = PRODUCT_ID_PATTERN.test(nextFilters.productId)
@@ -519,6 +521,7 @@ export function OrdersManagement({
             };
           },
         });
+        if (requestId !== loadRequestIdRef.current) return;
         setRows(
           (result.data as Order[]).map((order) => ({
             ...order,
@@ -565,20 +568,25 @@ export function OrdersManagement({
             };
           },
         });
+        if (requestId !== loadRequestIdRef.current) return;
         setSummary({
           ...summaryData,
           profit: Number(summaryData.profit || 0),
         });
       } catch (caught) {
+        if (requestId !== loadRequestIdRef.current) return;
         setError(
           caught instanceof Error ? caught.message : "Không tải được đơn hàng.",
         );
       }
+      if (requestId !== loadRequestIdRef.current) return;
       setPage(urlPage);
       setSize(urlSize);
       setFilters(urlFilters);
-      setDraftFilters(urlFilters);
-      setDraftContact({ name: urlFilters.customer, phone: "", address: "" });
+      if (draftRevisionAtStart === filterDraftRevisionRef.current) {
+        setDraftFilters(urlFilters);
+        setDraftContact({ name: urlFilters.customer, phone: "", address: "" });
+      }
       finishInitialLoad();
       const next = new URLSearchParams();
       if (urlPage > 1) next.set("page", String(urlPage));
@@ -714,7 +722,7 @@ export function OrdersManagement({
     return () => window.removeEventListener("popstate", readUrlState);
   }, [canViewProfit, isMobileRoute, load, setSort, sort]);
   useEffect(() => {
-    if (!filtersOpen) return;
+    if (!productPickerOpen) return;
     let active = true;
     void readPosSearchProducts(supabase)
       .then((products) => {
@@ -758,7 +766,7 @@ export function OrdersManagement({
     return () => {
       active = false;
     };
-  }, [debouncedProductSearch, filtersOpen, queryClient, supabase, userId]);
+  }, [debouncedProductSearch, productPickerOpen, queryClient, supabase, userId]);
   useEffect(() => {
     if (!editing || !canReadProducts) {
       setEditProductSearch("");
@@ -809,36 +817,21 @@ export function OrdersManagement({
     };
   }, [canReadProducts, editing, queryClient, supabase]);
   useEffect(() => {
-    if (!filtersOpen) return;
-    function closeFilter(event: PointerEvent) {
-      if (filterRootRef.current?.contains(event.target as Node)) return;
-      if (
-        event.target instanceof Element &&
-        (event.target.closest(".daterangepicker") ||
-          event.target.closest("[data-customer-picker-menu]") ||
-          event.target.closest(".app-select-menu"))
-      )
-        return;
-      setFiltersOpen(false);
+    if (!productPickerOpen) return;
+    function closeProductPicker(event: PointerEvent) {
+      if (productFilterRef.current?.contains(event.target as Node)) return;
       setProductPickerOpen(false);
     }
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setFiltersOpen(false);
-        setProductPickerOpen(false);
-      }
+    function closeProductPickerOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setProductPickerOpen(false);
     }
-    window.addEventListener("pointerdown", closeFilter);
-    window.addEventListener("keydown", closeOnEscape);
+    window.addEventListener("pointerdown", closeProductPicker);
+    window.addEventListener("keydown", closeProductPickerOnEscape);
     return () => {
-      window.removeEventListener("pointerdown", closeFilter);
-      window.removeEventListener("keydown", closeOnEscape);
+      window.removeEventListener("pointerdown", closeProductPicker);
+      window.removeEventListener("keydown", closeProductPickerOnEscape);
     };
-  }, [filtersOpen]);
-  useDialogBehavior(isMobileRoute && filtersOpen, filterPanelRef, () => {
-    setFiltersOpen(false);
-    setProductPickerOpen(false);
-  });
+  }, [productPickerOpen]);
   useEffect(
     () => () => {
       if (filterApplyTimerRef.current !== null)
@@ -1332,15 +1325,8 @@ export function OrdersManagement({
   function change(next: Partial<{ page: number; size: number }>) {
     void load(next.page ?? page, next.size ?? size, filters);
   }
-  function toggleFilters() {
-    if (filtersOpen) {
-      setProductPickerOpen(false);
-      setFiltersOpen(false);
-      return;
-    }
-    setFiltersOpen(true);
-  }
   function scheduleFilterApply(nextFilters: OrderFilters) {
+    filterDraftRevisionRef.current += 1;
     setDraftFilters(nextFilters);
     if (filterApplyTimerRef.current !== null)
       window.clearTimeout(filterApplyTimerRef.current);
@@ -1351,6 +1337,7 @@ export function OrdersManagement({
   }
   function clearFilters() {
     const defaults = defaultOrderFilters();
+    filterDraftRevisionRef.current += 1;
     if (filterApplyTimerRef.current !== null) {
       window.clearTimeout(filterApplyTimerRef.current);
       filterApplyTimerRef.current = null;
@@ -1387,6 +1374,7 @@ export function OrdersManagement({
       window.clearTimeout(filterApplyTimerRef.current);
       filterApplyTimerRef.current = null;
     }
+    filterDraftRevisionRef.current += 1;
     setDraftFilters(nextFilters);
     void load(1, size, nextFilters);
   }
@@ -1400,6 +1388,7 @@ export function OrdersManagement({
       window.clearTimeout(filterApplyTimerRef.current);
       filterApplyTimerRef.current = null;
     }
+    filterDraftRevisionRef.current += 1;
     setDraftFilters(nextFilters);
     void load(1, size, nextFilters);
   }
@@ -1831,9 +1820,10 @@ export function OrdersManagement({
         />
       </div>
       <div className="orders-workspace">
-        <aside
-          ref={filterRootRef}
-          className="product-filters card orders-filter"
+        <FilterPanel
+          ariaLabel="Bộ lọc đơn hàng"
+          heading="Lọc đơn hàng"
+          className="orders-filter"
         >
           <div className="orders-filter-date">
             <span>Khoảng thời gian</span>
@@ -1842,296 +1832,224 @@ export function OrdersManagement({
               end={draftFilters.to}
               ariaLabel="Lọc đơn hàng theo ngày"
               onChange={changeDraftDates}
-            />
-            <div className="orders-filter-time">
-              <label>
-                <span>Từ giờ</span>
-                <AppInput
-                  type="time"
-                  step={60}
-                  aria-label="Lọc từ giờ"
-                  value={draftFilters.fromTime}
-                  onChange={(event) =>
-                    changeDraftTime("fromTime", event.target.value)
-                  }
-                />
-              </label>
-              <label>
-                <span>Đến giờ</span>
-                <AppInput
-                  type="time"
-                  step={60}
-                  aria-label="Lọc đến giờ"
-                  value={draftFilters.toTime}
-                  onChange={(event) =>
-                    changeDraftTime("toTime", event.target.value)
-                  }
-                />
-              </label>
-            </div>
-          </div>
-          <AppButton
-            variant="default"
-            type="button"
-            className="orders-filter-trigger"
-            aria-expanded={filtersOpen}
-            aria-controls="orders-filter-panel"
-            onClick={toggleFilters}
-          >
-            <span>
-              {filters.invoice ||
-              filters.customer ||
-              filters.productSkus.length ||
-              filters.productId ||
-              filters.statuses.length !== 1 ||
-              filters.statuses[0] !== "completed" ? (
-                <span>
-                  {[
-                    filters.invoice && `Mã hóa đơn: ${filters.invoice}`,
-                    filters.productId &&
-                      `Hàng hóa: ${filters.productName || filters.productId}`,
-                    filters.productSkus.length > 0 &&
-                      `${filters.productSkus.length} sản phẩm`,
-                    filters.customer && `Khách hàng: ${filters.customer}`,
-                    filters.statuses.length === 0
-                      ? "Mọi trạng thái"
-                      : filters.statuses.length !== 1 ||
-                          filters.statuses[0] !== "completed"
-                        ? filters.statuses
-                            .map((status) =>
-                              status === "completed" ? "Hoàn thành" : "Đã hủy",
-                            )
-                            .join(", ")
-                        : "Hoàn thành",
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </span>
-              ) : (
-                <span>Lọc đơn hàng</span>
-              )}
-            </span>
-            <SlidersHorizontal size={18} aria-hidden="true" />
-          </AppButton>
-          {filtersOpen && (
-            <>
-              {isMobileRoute && (
-                <div
-                  className="mobile-filter-scrim"
-                  aria-hidden="true"
-                  onMouseDown={() => {
-                    setFiltersOpen(false);
-                    setProductPickerOpen(false);
-                  }}
-                />
-              )}
-              <div
-                ref={filterPanelRef}
-                id="orders-filter-panel"
-                className="orders-filter-panel"
-                role={isMobileRoute ? "dialog" : undefined}
-                aria-modal={isMobileRoute ? true : undefined}
-                aria-label="Lọc đơn hàng"
-                data-mobile-filter-sheet={isMobileRoute ? "" : undefined}
-                tabIndex={-1}
-              >
-                <div className="mobile-filter-panel-heading">
-                  <strong>Lọc đơn hàng</strong>
-                  <AppButton
-                    variant="ghost"
-                    type="button"
-                    className="mobile-dialog-close"
-                    aria-label="Đóng bộ lọc"
-                    onClick={() => {
-                      setFiltersOpen(false);
-                      setProductPickerOpen(false);
-                    }}
-                  >
-                    <X size={18} />
-                  </AppButton>
-                </div>
-                <div className="orders-filter-grid">
-                  <label className="form-label">
-                    Theo mã hóa đơn
+              calendarFooter={{
+                left: (
+                  <label className="orders-filter-time">
+                    <span>Từ giờ</span>
                     <AppInput
-                      className="field"
-                      placeholder="Theo mã hóa đơn"
-                      value={draftFilters.invoice}
+                      type="time"
+                      step={60}
+                      aria-label="Lọc từ giờ"
+                      value={draftFilters.fromTime}
                       onChange={(event) =>
-                        scheduleFilterApply({
-                          ...draftFilters,
-                          invoice: event.target.value,
-                        })
+                        changeDraftTime("fromTime", event.target.value)
                       }
                     />
                   </label>
-                  <div
-                    className="form-label orders-product-filter"
-                    onBlur={(event) => {
-                      if (!event.currentTarget.contains(event.relatedTarget))
-                        setProductPickerOpen(false);
-                    }}
-                  >
-                    Theo mã, tên hàng
+                ),
+                right: (
+                  <label className="orders-filter-time">
+                    <span>Đến giờ</span>
                     <AppInput
-                      className="field"
-                      role="combobox"
-                      aria-label="Tìm sản phẩm theo mã hoặc tên"
-                      aria-autocomplete="list"
-                      aria-expanded={productPickerOpen}
-                      aria-controls="orders-product-options"
-                      placeholder="Tìm mã hoặc tên sản phẩm"
-                      value={productSearch}
-                      onFocus={() => setProductPickerOpen(true)}
-                      onChange={(event) => {
-                        setProductSearch(event.target.value);
-                        setProductPickerOpen(true);
-                      }}
+                      type="time"
+                      step={60}
+                      aria-label="Lọc đến giờ"
+                      value={draftFilters.toTime}
+                      onChange={(event) =>
+                        changeDraftTime("toTime", event.target.value)
+                      }
                     />
-                    {productPickerOpen && (
-                      <div
-                        id="orders-product-options"
-                        className="orders-product-options"
-                        role="listbox"
-                        aria-label="Chọn sản phẩm"
-                        aria-multiselectable="true"
-                      >
-                        {productOptionsLoading ? (
-                          <span className="muted">Đang tải sản phẩm…</span>
-                        ) : visibleProductOptions.length ? (
-                          visibleProductOptions.map((product) => {
-                            const checked = draftFilters.productSkus.includes(
-                              product.sku,
-                            );
-                            return (
-                              <AppButton
-                                variant="ghost"
-                                type="button"
-                                role="option"
-                                aria-selected={checked}
-                                key={product.sku}
-                                className={mergeClassNames(
-                                  "orders-product-option",
-                                  checked && "selected",
-                                )}
-                                onMouseDown={(event) => event.preventDefault()}
-                                onClick={() => toggleProduct(product.sku)}
-                              >
-                                <span>
-                                  <b>{product.sku}</b>
-                                  <span>{product.product_name}</span>
-                                </span>
-                                {checked && (
-                                  <Check size={16} aria-hidden="true" />
-                                )}
-                              </AppButton>
-                            );
-                          })
-                        ) : (
-                          <span className="muted">
-                            Không tìm thấy sản phẩm trong các hóa đơn bạn có
-                            quyền xem.
-                          </span>
-                        )}
-                      </div>
-                    )}
-                    {(draftFilters.productId ||
-                      draftFilters.productSkus.length > 0) && (
-                      <div className="orders-product-chips">
-                        {draftFilters.productId && (
+                  </label>
+                ),
+              }}
+            />
+          </div>
+          <div
+            className="orders-filter-fields"
+            role="group"
+            aria-label="Lọc đơn hàng"
+          >
+            <div className="orders-filter-grid">
+              <label className="form-label">
+                Theo mã hóa đơn
+                <AppInput
+                  className="field"
+                  placeholder="Theo mã hóa đơn"
+                  value={draftFilters.invoice}
+                  onChange={(event) =>
+                    scheduleFilterApply({
+                      ...draftFilters,
+                      invoice: event.target.value,
+                    })
+                  }
+                />
+              </label>
+              <div
+                ref={productFilterRef}
+                className="form-label orders-product-filter"
+                onBlur={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget))
+                    setProductPickerOpen(false);
+                }}
+              >
+                Theo mã, tên hàng
+                <AppInput
+                  className="field"
+                  role="combobox"
+                  aria-label="Tìm sản phẩm theo mã hoặc tên"
+                  aria-autocomplete="list"
+                  aria-expanded={productPickerOpen}
+                  aria-controls="orders-product-options"
+                  placeholder="Tìm mã hoặc tên sản phẩm"
+                  value={productSearch}
+                  onFocus={() => setProductPickerOpen(true)}
+                  onChange={(event) => {
+                    setProductSearch(event.target.value);
+                    setProductPickerOpen(true);
+                  }}
+                />
+                {productPickerOpen && (
+                  <div
+                    id="orders-product-options"
+                    className="orders-product-options"
+                    role="listbox"
+                    aria-label="Chọn sản phẩm"
+                    aria-multiselectable="true"
+                  >
+                    {productOptionsLoading ? (
+                      <span className="muted">Đang tải sản phẩm…</span>
+                    ) : visibleProductOptions.length ? (
+                      visibleProductOptions.map((product) => {
+                        const checked = draftFilters.productSkus.includes(
+                          product.sku,
+                        );
+                        return (
                           <AppButton
-                            variant="default"
+                            variant="ghost"
                             type="button"
-                            className="orders-product-chip"
-                            title={`Bỏ ${draftFilters.productName || "hàng hóa"}`}
-                            onClick={() =>
-                              scheduleFilterApply({
-                                ...draftFilters,
-                                productId: "",
-                                productName: "",
-                              })
-                            }
+                            role="option"
+                            aria-selected={checked}
+                            key={product.sku}
+                            className={mergeClassNames(
+                              "orders-product-option",
+                              checked && "selected",
+                            )}
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => toggleProduct(product.sku)}
                           >
-                            <span className="orders-product-chip-label">
-                              {draftFilters.productName || "Hàng hóa đã chọn"}
+                            <span>
+                              <b>{product.sku}</b>
+                              <span>{product.product_name}</span>
                             </span>
-                            <X size={13} aria-hidden="true" />
+                            {checked && (
+                              <Check size={16} aria-hidden="true" />
+                            )}
                           </AppButton>
-                        )}
-                        {draftFilters.productSkus.map((sku) => (
-                          <AppButton
-                            variant="default"
-                            type="button"
-                            className="orders-product-chip"
-                            key={sku}
-                            title={`Bỏ ${sku}`}
-                            onClick={() => toggleProduct(sku)}
-                          >
-                            <span className="orders-product-chip-label">
-                              {productOptions.find(
-                                (product) => product.sku === sku,
-                              )?.product_name ||
-                                cachedProducts.find(
-                                  (product) => product.sku === sku,
-                                )?.name ||
-                                sku}
-                            </span>
-                            <X size={13} aria-hidden="true" />
-                          </AppButton>
-                        ))}
-                      </div>
+                        );
+                      })
+                    ) : (
+                      <span className="muted">
+                        Không tìm thấy sản phẩm trong các hóa đơn bạn có
+                        quyền xem.
+                      </span>
                     )}
                   </div>
-                  <CustomerPicker
-                    searchOnly
-                    searchLabel="Theo tên hoặc SĐT khách hàng"
-                    placeholder="Tìm theo tên, sđt hoặc địa chỉ"
-                    showSearchIcon={false}
-                    suggestionsEnabled={canSearchCustomers}
-                    disabled={false}
-                    value={draftContact}
-                    onChange={(contact) => {
-                      setDraftContact(contact);
-                      scheduleFilterApply({
-                        ...draftFilters,
-                        customer: contact.name,
-                      });
-                    }}
-                  />
-                </div>
-                <fieldset className="orders-filter-statuses">
-                  <legend>Trạng thái đơn hàng</legend>
-                  <label>
-                    <AppInput
-                      type="checkbox"
-                      checked={draftFilters.statuses.includes("completed")}
-                      onChange={() => toggleStatus("completed")}
-                    />
-                    Hoàn thành
-                  </label>
-                  <label>
-                    <AppInput
-                      type="checkbox"
-                      checked={draftFilters.statuses.includes("cancelled")}
-                      onChange={() => toggleStatus("cancelled")}
-                    />
-                    Đã hủy
-                  </label>
-                </fieldset>
-                <div className="orders-filter-actions">
-                  <AppButton
-                    variant="ghost"
-                    type="button"
-                    className="filter-clear-button"
-                    onClick={clearFilters}
-                  >
-                    Xóa bộ lọc
-                  </AppButton>
-                </div>
+                )}
+                {(draftFilters.productId ||
+                  draftFilters.productSkus.length > 0) && (
+                  <div className="orders-product-chips">
+                    {draftFilters.productId && (
+                      <AppButton
+                        variant="default"
+                        type="button"
+                        className="orders-product-chip"
+                        title={`Bỏ ${draftFilters.productName || "hàng hóa"}`}
+                        onClick={() =>
+                          scheduleFilterApply({
+                            ...draftFilters,
+                            productId: "",
+                            productName: "",
+                          })
+                        }
+                      >
+                        <span className="orders-product-chip-label">
+                          {draftFilters.productName || "Hàng hóa đã chọn"}
+                        </span>
+                        <X size={13} aria-hidden="true" />
+                      </AppButton>
+                    )}
+                    {draftFilters.productSkus.map((sku) => (
+                      <AppButton
+                        variant="default"
+                        type="button"
+                        className="orders-product-chip"
+                        key={sku}
+                        title={`Bỏ ${sku}`}
+                        onClick={() => toggleProduct(sku)}
+                      >
+                        <span className="orders-product-chip-label">
+                          {productOptions.find(
+                            (product) => product.sku === sku,
+                          )?.product_name ||
+                            cachedProducts.find(
+                              (product) => product.sku === sku,
+                            )?.name ||
+                            sku}
+                        </span>
+                        <X size={13} aria-hidden="true" />
+                      </AppButton>
+                    ))}
+                  </div>
+                )}
               </div>
-            </>
-          )}
-        </aside>
+              <CustomerPicker
+                searchOnly
+                searchLabel="Theo tên hoặc SĐT khách hàng"
+                placeholder="Tìm theo tên, sđt hoặc địa chỉ"
+                showSearchIcon={false}
+                suggestionsEnabled={canSearchCustomers}
+                disabled={false}
+                value={draftContact}
+                onChange={(contact) => {
+                  setDraftContact(contact);
+                  scheduleFilterApply({
+                    ...draftFilters,
+                    customer: contact.name,
+                  });
+                }}
+              />
+            </div>
+            <fieldset className="orders-filter-statuses">
+              <legend>Trạng thái đơn hàng</legend>
+              <label>
+                <AppInput
+                  type="checkbox"
+                  checked={draftFilters.statuses.includes("completed")}
+                  onChange={() => toggleStatus("completed")}
+                />
+                Hoàn thành
+              </label>
+              <label>
+                <AppInput
+                  type="checkbox"
+                  checked={draftFilters.statuses.includes("cancelled")}
+                  onChange={() => toggleStatus("cancelled")}
+                />
+                Đã hủy
+              </label>
+            </fieldset>
+            <div className="orders-filter-actions">
+              <AppButton
+                variant="ghost"
+                type="button"
+                className="filter-clear-button"
+                onClick={clearFilters}
+              >
+                Xóa bộ lọc
+              </AppButton>
+            </div>
+          </div>
+        </FilterPanel>
         <div>
           {error && (
             <div className="alert" style={{ marginBottom: 12 }}>

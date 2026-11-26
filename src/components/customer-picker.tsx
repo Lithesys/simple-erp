@@ -132,7 +132,7 @@ export function CustomerPicker({
                   : "Không tìm thấy. Bạn có thể nhập khách mới cho hóa đơn này.",
             );
           })();
-        }, 200);
+        }, 300);
       } catch {
         if (active)
           setStatus(

@@ -3,7 +3,8 @@
 import { AppInput } from "@/components/app-input";
 import { selectAvailableDateCell } from "@/lib/date-range-calendar";
 
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { todayLocal } from "@/lib/format";
 import { getDateRangePresets } from "@/lib/date-range-presets";
 
@@ -14,6 +15,7 @@ type DateRangeInputProps = {
   placeholder?: string;
   ariaLabel: string;
   className?: string;
+  calendarFooter?: { left: ReactNode; right: ReactNode };
 };
 
 type MomentValue = { format: (template: string) => string };
@@ -49,6 +51,7 @@ export function DateRangeInput({
   placeholder = "Chọn khoảng thời gian",
   ariaLabel,
   className = "field date-range-field",
+  calendarFooter,
 }: DateRangeInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const jqueryRef = useRef<
@@ -59,6 +62,11 @@ export function DateRangeInput({
   const onChangeRef = useRef(onChange);
   const openPickerRequestedRef = useRef(false);
   const [ready, setReady] = useState(false);
+  const [calendarFooterHosts, setCalendarFooterHosts] = useState<{
+    left: HTMLElement;
+    right: HTMLElement;
+  } | null>(null);
+  const hasCalendarFooter = calendarFooter !== undefined;
 
   function openDatePicker() {
     const input = inputRef.current;
@@ -153,6 +161,22 @@ export function DateRangeInput({
       });
       const picker = wrapped.data("daterangepicker");
       const calendarElement = picker?.container?.[0];
+      if (hasCalendarFooter && calendarElement) {
+        const createFooterHost = (side: "left" | "right") => {
+          const calendar = calendarElement.querySelector<HTMLElement>(
+            ".drp-calendar." + side,
+          );
+          if (!calendar) return null;
+          const host = document.createElement("div");
+          host.className = "date-range-calendar-footer";
+          calendar.append(host);
+          return host;
+        };
+        const leftHost = createFooterHost("left");
+        const rightHost = createFooterHost("right");
+        if (leftHost && rightHost)
+          setCalendarFooterHosts({ left: leftHost, right: rightHost });
+      }
       if (picker?.clickDate && calendarElement && jqueryRef.current) {
         calendarElement
           .querySelectorAll<HTMLElement>(".drp-calendar")
@@ -237,7 +261,7 @@ export function DateRangeInput({
       wrapped?.data("daterangepicker")?.remove?.();
       jqueryRef.current = null;
     };
-  }, []);
+  }, [hasCalendarFooter]);
 
   useEffect(() => {
     const input = inputRef.current;
@@ -259,15 +283,23 @@ export function DateRangeInput({
   }, [start, end, ready]);
 
   return (
-    <AppInput
-      ref={inputRef}
-      className={className}
-      type="text"
-      readOnly
-      placeholder={placeholder}
-      aria-label={ariaLabel}
-      onFocus={openDatePicker}
-      onClick={openDatePicker}
-    />
+    <>
+      <AppInput
+        ref={inputRef}
+        className={className}
+        type="text"
+        readOnly
+        placeholder={placeholder}
+        aria-label={ariaLabel}
+        onFocus={openDatePicker}
+        onClick={openDatePicker}
+      />
+      {calendarFooter && calendarFooterHosts && (
+        <>
+          {createPortal(calendarFooter.left, calendarFooterHosts.left)}
+          {createPortal(calendarFooter.right, calendarFooterHosts.right)}
+        </>
+      )}
+    </>
   );
 }
