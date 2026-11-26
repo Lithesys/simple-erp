@@ -81,7 +81,6 @@ export function CustomerPicker({
     let active = true;
     let fallbackTimer = 0;
     void (async () => {
-      setStatus("Đang tìm…");
       let cachedRows: Customer[] | null = null;
       try {
         try {
@@ -90,6 +89,7 @@ export function CustomerPicker({
           // If browser storage is unavailable, continue with the server query.
         }
         if (!active) return;
+        setStatus("");
         if (cachedRows !== null) {
           setRows(cachedRows);
           setActiveIndex(0);
@@ -99,6 +99,8 @@ export function CustomerPicker({
           return;
         }
         fallbackTimer = window.setTimeout(() => {
+          if (!active) return;
+          setStatus("Đang tìm…");
           void (async () => {
             let data: { rows?: Customer[] } | null = null;
             let error: Error | null = null;

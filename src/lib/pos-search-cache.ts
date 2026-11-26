@@ -259,10 +259,11 @@ export async function searchCachedCustomers(
     if (exactMatches.length)
       return exactMatches.slice(0, limit).map(({ customer }) => customer);
   }
-  return index.rows
+  const matches = index.rows
     .filter(({ text }) => matchesCachedCustomerText(text, needle))
-    .map(({ customer }) => customer)
-    .slice(0, limit);
+    .map(({ customer }) => customer);
+  if (needle && matches.length === 0) return null;
+  return matches.slice(0, limit);
 }
 
 export async function syncPosSearchData(

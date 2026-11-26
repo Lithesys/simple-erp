@@ -61,6 +61,7 @@ import {
   hasSellableBundleItems,
 } from "@/lib/product-bundles";
 import {
+  readPosSearchCache,
   readPosSearchProducts,
   searchProductsLocally,
 } from "@/lib/pos-search-cache";
@@ -262,6 +263,7 @@ export function OrdersManagement({
   const [productOptions, setProductOptions] = useState<ProductFilterOption[]>(
     [],
   );
+  const [productCacheReady, setProductCacheReady] = useState(false);
   const [cachedProducts, setCachedProducts] = useState<
     { sku: string; name: string }[]
   >([]);
@@ -279,11 +281,15 @@ export function OrdersManagement({
   });
   const debouncedProductSearch = useDebounce(productSearch);
   const localProductOptions = useMemo(
-    () =>
-      searchProductsLocally(cachedProducts, productSearch).map((product) => ({
+    () => {
+      const products = productSearch.trim()
+        ? searchProductsLocally(cachedProducts, productSearch)
+        : cachedProducts.slice(0, 8);
+      return products.map((product) => ({
         sku: product.sku,
         product_name: product.name,
-      })),
+      }));
+    },
     [cachedProducts, productSearch],
   );
   const editProductOptions = useMemo(
@@ -309,10 +315,15 @@ export function OrdersManagement({
     productOptions,
     productSearch,
   ]);
+  const currentProductSearch = safeFilterText(productSearch);
+  const debouncedProductSearchTerm = safeFilterText(debouncedProductSearch);
   const productOptionsLoading =
-    visibleProductOptions.length === 0 &&
-    (loadedProductSearch !== safeFilterText(debouncedProductSearch) ||
-      safeFilterText(productSearch) !== safeFilterText(debouncedProductSearch));
+    productPickerOpen &&
+    localProductOptions.length === 0 &&
+    (!productCacheReady ||
+      (Boolean(currentProductSearch) &&
+        (currentProductSearch !== debouncedProductSearchTerm ||
+          loadedProductSearch !== currentProductSearch)));
   const [selected, setSelected] = useState<Order | null>(null);
   const loadedDetailOrderIdRef = useRef<string | null>(null);
   const detailRequestIdRef = useRef(0);
@@ -722,21 +733,34 @@ export function OrdersManagement({
     return () => window.removeEventListener("popstate", readUrlState);
   }, [canViewProfit, isMobileRoute, load, setSort, sort]);
   useEffect(() => {
-    if (!productPickerOpen) return;
     let active = true;
-    void readPosSearchProducts(supabase)
-      .then((products) => {
-        if (!active || !products) return;
+    setProductCacheReady(false);
+    setCachedProducts([]);
+    setProductOptions([]);
+    setLoadedProductSearch(null);
+    void readPosSearchCache(userId)
+      .then((cache) => {
+        if (!active) return;
         setCachedProducts(
-          products
+          (cache?.products ?? [])
             .filter((product) => product.is_active)
             .map(({ sku, name }) => ({ sku, name })),
         );
+        setProductCacheReady(true);
       })
       .catch(() => {
-        // The local cache is an optional instant-search layer.
+        if (active) setProductCacheReady(true);
       });
+    return () => {
+      active = false;
+    };
+  }, [userId]);
+  useEffect(() => {
+    if (!productPickerOpen || !productCacheReady) return;
     const term = safeFilterText(debouncedProductSearch);
+    const currentTerm = safeFilterText(productSearch);
+    if (!term || term !== currentTerm) return;
+    let active = true;
     queryClient
       .fetchQuery({
         queryKey: ["order-product-filter-options", userId, term],
@@ -766,7 +790,15 @@ export function OrdersManagement({
     return () => {
       active = false;
     };
-  }, [debouncedProductSearch, productPickerOpen, queryClient, supabase, userId]);
+  }, [
+    debouncedProductSearch,
+    productCacheReady,
+    productPickerOpen,
+    productSearch,
+    queryClient,
+    supabase,
+    userId,
+  ]);
   useEffect(() => {
     if (!editing || !canReadProducts) {
       setEditProductSearch("");
@@ -1917,7 +1949,11 @@ export function OrdersManagement({
                     aria-multiselectable="true"
                   >
                     {productOptionsLoading ? (
-                      <span className="muted">Đang tải sản phẩm…</span>
+                      <span className="muted">
+                        {productCacheReady
+                          ? "Đang tìm sản phẩm…"
+                          : "Đang đọc hàng hóa đã lưu…"}
+                      </span>
                     ) : visibleProductOptions.length ? (
                       visibleProductOptions.map((product) => {
                         const checked = draftFilters.productSkus.includes(
@@ -1949,8 +1985,9 @@ export function OrdersManagement({
                       })
                     ) : (
                       <span className="muted">
-                        Không tìm thấy sản phẩm trong các hóa đơn bạn có
-                        quyền xem.
+                        {productSearch.trim()
+                          ? "Không tìm thấy sản phẩm trong các hóa đơn bạn có quyền xem."
+                          : "Nhập mã hoặc tên sản phẩm để tìm."}
                       </span>
                     )}
                   </div>
